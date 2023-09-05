@@ -114,27 +114,27 @@ def page_rank_t3(tfidf_matrix, processed_sentences, sentences, n=2):
 
 
 #<!...........................END OF PART 1...............................................!>
-
+# summary sentences using MMR technique
 def MMR_t4(pagerank_scores,cosine_sim_matrix,processed_sentences,sentences,alpha,n=2):
 
     R=[]
     R_idx=[]
-    sorted_sentences = sorted(pagerank_scores, key=pagerank_scores.get, reverse=True)
-    R.append(processed_sentences[sorted_sentences[0]])
-    R_idx.append(sorted_sentences[0])
-    sorted_sentences.remove(sorted_sentences[0])
+    sorted_sentences = sorted(pagerank_scores, key=pagerank_scores.get, reverse=True) # Sort the sentences based on their PageRank scores
+    R.append(processed_sentences[sorted_sentences[0]]) # Get the topmost sentence
+    R_idx.append(sorted_sentences[0]) # Get the topmost sentence index no
+    sorted_sentences.remove(sorted_sentences[0]) # Remove the topmost sentence from the list
     x=0
     while len(R)<n:
         scores=[]
         index_track=[]
-        for i in range(len(sorted_sentences)):
-            scores.append(alpha*pagerank_scores[sorted_sentences[i]]-(1-alpha)*max(cosine_sim_matrix[sorted_sentences[i]][R_idx[j]] for j in range(len(R_idx))))
-            index_track.append(sorted_sentences[i])
+        for i in range(len(sorted_sentences)): # Calculate the MMR score for each sentence
+            scores.append(alpha*pagerank_scores[sorted_sentences[i]]-(1-alpha)*max(cosine_sim_matrix[sorted_sentences[i]][R_idx[j]] for j in range(len(R_idx)))) # Calculate the MMR score using the formula
+            index_track.append(sorted_sentences[i]) # Keep track of the index of the sentence
     
-        index_track=scores.index(max(scores))
-        R.append(processed_sentences[index_track])
-        R_idx.append(index_track)
-        sorted_sentences.remove(index_track)
+        index_track=scores.index(max(scores)) # Get the index of the sentence with the highest MMR score
+        R.append(processed_sentences[index_track]) 
+        R_idx.append(index_track) # Get the index of the sentence with the highest MMR score
+        sorted_sentences.remove(index_track) # Remove the sentence from the list
     
 
         
@@ -170,39 +170,36 @@ tfidf_matrix2=tfidf_matrix.T
 
 #<!...........................END OF FUNCTION CALLS of prev part...............................................!>
 
-def assign_to_clusters(cosine_sim_matrix,tfidf_matrix, centroids):
+def assign_to_clusters(cosine_sim_matrix,tfidf_matrix, centroids): # Assign each sentence to the cluster with the highest cosine similarity
     # cluster_assignments = np.argmax(cosine_sim_matrix, axis=1)
     cluster_assignments=np.argmax(cosine_similarity(tfidf_matrix, centroids), axis=1)
     return cluster_assignments
 
-
-def update_centroids(tfidf_matrix, cluster_assignments, K):
+def update_centroids(tfidf_matrix, cluster_assignments, K): # Update the centroids of each cluster
     new_centroids = np.zeros((K, tfidf_matrix.shape[1]))
     for cluster_idx in range(K):
-        cluster_points = tfidf_matrix[cluster_assignments == cluster_idx]
-        if cluster_points.shape[0] > 0:
-            new_centroids[cluster_idx] = np.mean(cluster_points, axis=0)
-    return new_centroids
+        cluster_points = tfidf_matrix[cluster_assignments == cluster_idx] # Get all the points in the cluster
+        if cluster_points.shape[0] > 0: 
+            new_centroids[cluster_idx] = np.mean(cluster_points, axis=0) 
+    return new_centroids 
 
-
-def k_means_clustering(tfidf_matrix, K, cosine_sim_matrix,max_iterations):
+def k_means_clustering(tfidf_matrix, K, cosine_sim_matrix,max_iterations): # K means clustering
 
     random.seed(42)
     initial_centroids_indices = random.sample(range(tfidf_matrix.shape[0]), K) # Initialize K centroids randomly
-    centroids = tfidf_matrix[initial_centroids_indices] 
+    centroids = tfidf_matrix[initial_centroids_indices]  # Get the centroid vectors
+
     for _ in range(max_iterations):
-        cluster_assignments = assign_to_clusters(cosine_sim_matrix,tfidf_matrix, centroids)
-        new_centroids = update_centroids(tfidf_matrix, cluster_assignments, K)
+        cluster_assignments = assign_to_clusters(cosine_sim_matrix,tfidf_matrix, centroids) # Assign each sentence to the cluster with the highest cosine similarity
+        new_centroids = update_centroids(tfidf_matrix, cluster_assignments, K) # Update the centroids of each cluster
         
-        if np.all(centroids == new_centroids):
+        if np.all(centroids == new_centroids): # If the centroids don't change, that is convergence
             break
         
-        centroids = new_centroids
+        centroids = new_centroids # Update the centroids
     return cluster_assignments
 
-
-
-def clustering_t21(tfidf_matrix, sentences, K, cosine_sim_matrix, max_iterations):
+def clustering_t21(tfidf_matrix, sentences, K, cosine_sim_matrix, max_iterations): # K means clustering
     cluster_assignments = k_means_clustering(tfidf_matrix, K, cosine_sim_matrix,max_iterations) # Get the cluster assignments for each sentence
 
     clusters = defaultdict(list)  # Use defaultdict to automatically create lists for clusters
@@ -230,7 +227,7 @@ def print_clusters(clusters):
 
     print("'output_t21_clusters.txt' created successfully")
 
-
+# K means clustering
 max_iterations=100
 clusters = clustering_t21(tfidf_matrix2, sentences, k,cosine_sim_matrix, max_iterations)
 print_clusters(clusters)
@@ -238,85 +235,85 @@ print_clusters(clusters)
 #<!...........................END OF PART 2 CLUSTERing K means...............................................!>
 
 
-def find_closest_sentence_to_centroid(cluster, tfidf_matrix):
+def find_closest_sentence_to_centroid(cluster, tfidf_matrix): # find the sentence that is closest to the cluster centroid (S1)
     centroid = np.mean(tfidf_matrix[cluster['indices']], axis=0)
     cosine_similarities = cosine_similarity([centroid], tfidf_matrix[cluster['indices']])[0]
     return cluster['indices'][np.argmax(cosine_similarities)]
 
-def find_sentence_with_common_bigrams(cluster, sentences, s1_idx):
+def find_sentence_with_common_bigrams(cluster, sentences, s1_idx): #finding sentences with atleast 3 bigrams
     s1_bigrams = set(cluster['bigrams'][s1_idx])
 
     for idx, _ in enumerate(sentences):
-        if idx==s1_idx:
+        if idx==s1_idx:     #skip the sentene if its the same as s1
             continue
 
-        sentence_bigrams = set(cluster['bigrams'][idx])
+        sentence_bigrams = set(cluster['bigrams'][idx]) #bigrams of the sentence
         common_bigrams = set()
 
         for bigram in s1_bigrams:
             if bigram in sentence_bigrams:
-                common_bigrams.add(bigram)
+                common_bigrams.add(bigram) #common bigrams between s1 and the sentence
 
-        if len(common_bigrams) >= 3:
+        if len(common_bigrams) >= 3: #if atleast 3 common bigrams are found we take that
             return idx
     
     return None
 
-def add_node(graph, node):
+def add_node(graph, node): # add node to the graph
     if node not in graph:
         graph[node] = []
 
-def add_edge(graph, node1, node2):
+def add_edge(graph, node1, node2): # add edge to the graph
     if node1 not in graph:
         graph[node1] = []
     graph[node1].append(node2)
 
-def add_bigram(graph, start_node, end_node, s):
+def add_bigram(graph, start_node, end_node, s): # add bigrams to the graph
     for i,bigram in enumerate(s):
-        if i==0:
+        if i==0: #if its the first bigram
             add_edge(graph,start_node,bigram)
-        if i==len(s)-1:
+        if i==len(s)-1: #if its the last bigram
             add_edge(graph,bigram,end_node)
-        else:
+        else: # for all other bigrams
             add_edge(graph,s[i-1],bigram)
     
-def construct_sentence_graph(s1, s2):
+def construct_sentence_graph(s1, s2): # forming the graph & then the summary sentence
     start_node = 'start'
     end_node = 'end'
     graph = {'start': []}
 
-    s1_bigrams = s1['bigrams'].split()
+    s1_bigrams = s1['bigrams'].split() #splitting the bigrams
     s2_bigrams = s2['bigrams'].split()
 
-    add_bigram(graph, start_node, end_node, s1_bigrams)
-    add_bigram(graph, start_node, end_node, s2_bigrams)
+    add_bigram(graph, start_node, end_node, s1_bigrams) #adding bigrams to the graph for s1 
+    add_bigram(graph, start_node, end_node, s2_bigrams) #adding bigrams to the graph for s2
 
-    return generate_sentence(graph)
+    return generate_sentence(graph) #generating the summary sentence
 
-def generate_sentence(graph):
+def generate_sentence(graph): #generating the summary sentence
     generated_sentence = []
-    current_node = 'start'
+    current_node = 'start' #start node
 
     while True:
-        next_nodes = graph.get(current_node, [])
+        next_nodes = graph.get(current_node, []) #get the next nodes
 
-        if not next_nodes:
+        if not next_nodes: #if no next nodes are found
             break
-        next_node = random.choice(next_nodes)
+        next_node = random.choice(next_nodes) #choose the next node rankdomly
         if next_node == 'end':
             break
 
-        generated_sentence.append(next_node)
+        generated_sentence.append(next_node) #append the next node to the generated sentence
         current_node = next_node
 
-    final_summary= ' '.join(generated_sentence)
+    final_summary= ' '.join(generated_sentence) #join the generated sentence
     return final_summary
 
-def summary_t22(clusters, sentences,tfidf_matrix):
+def summary_t22(clusters, sentences,tfidf_matrix): # forming the graph & then the summary sentence
     summary=[]
-    s1_index_track = []
+    s1_index_track = [] #keeping track of s1 index for final ordering
     for cluster_idx, cluster_sentences in clusters.items():
-        indices_dict = {'indices': range(len(cluster_sentences))}
+        indices_dict = {'indices': range(len(cluster_sentences))} #indices of the sentences in the cluster
         s1_idx = find_closest_sentence_to_centroid(indices_dict, tfidf_matrix) #find the sentence that is closest to the cluster centroid (S1)
         s1 = cluster_sentences[s1_idx] #the sentence actual
         s1_index_track.append((cluster_idx,sentences.index(s1))) #keeping its track for final ordering
@@ -343,16 +340,16 @@ def print_summary(summary):
             file.write(f'Cl- {i+1}: {summary[i]}\n')
     print("'output_t22_summary.txt' created successfully")
 
-
+# summary sentences
 summary,s1_index_track=summary_t22(clusters, sentences,tfidf_matrix.T)
 print_summary(summary)
 
 #<!...........................END OF PART 2 summary sentences...............................................!>
 
 
-def final_ordering(summary,s1_index_track):
+def final_ordering(summary,s1_index_track): # final ordering of summary sentences based on s1
     # print(s1_index_track)
-    s1_index_track.sort(key=lambda x: x[1])
+    s1_index_track.sort(key=lambda x: x[1]) # sorting based on s1 index that we kept track of 
     final_ordering=[]
     for i in range(len(s1_index_track)):
         final_ordering.append(summary[s1_index_track[i][0]])
@@ -364,7 +361,7 @@ def print_final_ordered_summary(final_ordering_clusters):
     #     print(f'Cl- {i+1}: {final_ordering_clusters[i]}')
 
     
-    with open('output_t23_final_ordered_summary.txt', 'w') as summary_file:
+    with open('output_t23_final_ordered_summary.txt', 'w') as summary_file: # writing to a output file
         summary_file.write("Final Summary in the actual order of input based on s1: \n\n")
         for i in range(len(final_ordering_clusters)):
             summary_file.write(f'Cl- {i+1}: {final_ordering_clusters[i]}\n')
@@ -372,7 +369,7 @@ def print_final_ordered_summary(final_ordering_clusters):
     print("'output_t23_final_ordered_summary.txt' created successfully")
 
 
-
+# final ordering of summary sentences based on s1
 final_ordering_clusters=final_ordering(summary,s1_index_track)
 print_final_ordered_summary(final_ordering_clusters)
 

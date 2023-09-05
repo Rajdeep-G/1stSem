@@ -1,0 +1,11 @@
+Read a line from a file 
+
+char line[100];
+fgets(line,100,fptr);
+
+Read a int from a file
+int no;
+fscanf(fptr,"%d",&no);
+
+write a int to a file
+fprintf(fptr,"%d",no);

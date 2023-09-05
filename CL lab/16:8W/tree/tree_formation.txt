@@ -1,0 +1,23 @@
+Create a queue (an array of pointers to struct TreeNode) to temporarily store nodes during the construction process.
+
+Create the root node of the binary tree using the first element of the level-order traversal array.
+
+Enqueue the root node into the queue.
+
+Iterate through the level-order traversal array starting from the second element (the first element was already used for the root node):
+a. Dequeue a node from the front of the queue. This node represents the parent node for the current elements being processed.
+b. Create a new node using the next element in the level-order array. If the element is not -1, it means a valid left child exists for the current parent node. Attach the new node as the left child of the parent node and enqueue it into the queue.
+c. Check if there's another element in the level-order array. If so, create a new node using the next element. If the element is not -1, it means a valid right child exists for the current parent node. Attach the new node as the right child of the parent node and enqueue it into the queue.
+
+Continue this process until all elements in the level-order array are processed.
+
+Once the iteration is complete, free the memory allocated for the queue.
+
+Return the root node of the constructed binary tree.
+
+In essence, the algorithm uses a queue to keep track of the nodes as they are being created. It dequeues a parent node, associates its children based on the level-order traversal array, and enqueues the children nodes for further processing. This process ensures that the binary tree is constructed in the correct structure based on the given level-order traversal.
+
+
+
+
+

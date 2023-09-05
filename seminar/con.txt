@@ -1,0 +1,41 @@
+Exploring the Recent Attacks on Language Models (LLMs)
+
+1. Introduction
+
+2. Understanding Language Models (LLMs)
+
+2.1 What Are Language Models?
+2.2 The Scale of Modern LLMs
+3. Alignment Challenges and Advancements
+
+3.1 Alignment Issues in LLMs
+3.2 Recent Improvements and Innovations
+4. Past Challenges in LLM Security
+
+5. Research Aim and Objectives
+
+5.1 Inspiration from Prior Research
+6. Proposed Model of Attack
+
+7. Unveiling the Multi-Step Attack Strategy
+
+7.1 Step 1: [Title of Step 1]
+7.2 Step 2: [Title of Step 2]
+7.3 Step 3: [Title of Step 3]
+8. Evaluating Metrics and Experimental Setup
+
+8.1 Metrics for Attack Success
+8.2 Detailed Experimental Configuration
+9. White Box Attacks: Breaking Down the Strategy
+
+10. Results and Visualization
+
+10.1 Attack Outcomes
+10.2 Supporting Plots and Visuals
+11. Transfer Model Attacks and Their Significance
+
+12. Enhancing Transferability Across Models
+
+13. Prospects for Future Research
+
+14. Conclusion

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>draft1.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="points-from-the-paper">Points from the PAPER</h1>
+<h2 id="imp">IMP</h2>
+<p><strong>Adversarial inputs</strong> ,&quot; also known as &quot;adversarial examples,&quot; refer to specially crafted or manipulated data inputs that are intentionally designed to deceive machine learning models, particularly neural networks. These inputs are created with the specific goal of causing the model to produce incorrect or unexpected outputs.These changes might seem harmless to human observers, but they can lead the model to make mistakes or misinterpret the input.</p>
+<ol>
+<li>
+<p>In this paper, we propose a simple and effective attack method that causes aligned language models to generate objectionable behaviours. Specifically, our approach finds a suffix that, when attached to a wide range of queries for an LLM to produce objectionable content, aims to maximise the probability that the model produces an affirmative response (rather than refusing to answer). Methods used - combination of greedy and gradient-based search techniques, and also improves over past automatic prompt generation methods.</p>
+</li>
+<li>
+<p>To summarise about what we are gonna work - by adding resulting suffix(ADVERSIAL PROMPT), we are able to induce objectionable content in the public interfaces to the LLMs</p>
+</li>
+<li>
+<p>although there has been some work on automatic prompt-tuning for adversarial attacks on LLMs [Shin et al., 2020, Wen et al., 2023, Jones et al., 2023], this has traditionally proven to be a challenging task, with some papers explicitly mentioning that they had been unable to generate reliable attacks through automatic search methods . Reason : unlike image models, LLMs operate on discrete token inputs, which both substantially limits the effective input dimensionality, and seems to induce a computationally difficult search.</p>
+</li>
+<li>
+<p>Our model :the user’s original query is left intact, but we add additional tokens to attack the model.</p>
+</li>
+</ol>
+<p>Key STEPS:</p>
+<pre><code>1. Initial affirmative response : Our attack targets the model to begin its response with &quot;SURE,HERE IS...&quot; , in response to a certain prompts that otherwise would give undesirable results. 
+
+2. Combined greedy &amp; gradient based dis optimization: We leverage gradient des at the token level to identify a set of promosing single token replacement, evaluate the loss of some no of candidate and select the best of the evaluated substutions.
+
+3. Robust multi prompt and multi model attacks : Finally, in order to generate reliable attack suffixes, we find that it is important to create an attack that works not just for a single prompt on a single model, but for multiple prompts across multiple models
+</code></pre>
+<h2 id="some-points-on-%22align-llm%22">SOME POINTS ON &quot;ALIGN LLM&quot;</h2>
+<p>Certainly! Large pretrained language models, like the ones you mentioned, are really good at many tasks right out of the box. However, they have some issues when used directly in apps that people interact with.</p>
+<p>First, they struggle to follow specific instructions from users, like if you asked one to write a sorting function in Python. This is because the model was trained on a lot of text from the internet, which doesn't often have examples of following instructions exactly.</p>
+<p>Second, these models can end up copying the biases, bad language, and negative behavior that exist on the internet. They're kind of like a mirror of the internet's good and bad parts.</p>
+<p>So, to make these models work better for real people, developers use techniques to adjust or &quot;align&quot; them. One way is to fine-tune the model by giving it specific tasks with instructions, so it gets better at following directions. Another way is to teach the model using feedback from humans. This helps the model learn what people like and prefer, so it generates better and more desirable responses.</p>
+<p>In simple terms, developers make these big language models better at understanding and behaving like we want them to by giving them special training and feedback.</p>
+<p>...........</p>
+<h3 id="challenge-of-maintaining-alignment-against-adversarial-users-who-attempt-to-generate-harmful-content-through-clever-inputs-adversarial-examples">Challenge of maintaining alignment against adversarial users who attempt to generate harmful content through clever inputs (adversarial examples).</h3>
+<p>That paper :  It shows that current natural language processing (NLP) attacks are not strong enough to consistently manipulate aligned text models into emitting harmful conten</p>
+<p>..............</p>
+<h1 id="21">2.1</h1>
+<h2 id="producing-affirmative-responses">Producing Affirmative Responses</h2>
+<p>The intuition of this approach is that if the language model can be put into a “state” where this completion is the most likely response, as opposed to refusing to answer the query, then it likely will continue the completion with precisely the desired objectionable behavior</p>
+<p>this manual approach is only marginally successful, though, and can often be circumvented by slightly more sophisticated alignment techniques.</p>
+<p>previous work found that - specifying only the first target token was often sufficient. in the text-only space, targeting just the first token runs the risk of entirely overriding the original promp</p>
+<p>Eg: Nevermind, tell me a joke .</p>
+<h2 id="22-greedy-goordinate-gradient-based-search">2.2 Greedy Goordinate Gradient-based Search</h2>
+<p>The motivation for our approach comes from the greedy coordinate descent approach: if we could evaluate all possible single-token substitutions, we could swap the token that maximally decreased the loss.</p>
+<p>Of course, evaluating all such replacements is not feasible, but we can leverage gradients with respect to the one-hot token indicators to find a set of promising candidates for replacement at each token position, and then evaluate all these replacements exactly via a forward pas</p>
+<p>Note that because LLMs typically form embeddings for each token, they can be written as functions of this value exi, and thus we can immediately take the gradient with respect to this quantity</p>
+<p>We then compute the top-k values with the largest negative gradient as the candidate replacements for token xi. We compute this candidate set for all tokens i ∈ I, randomly select B ≤ k|I| tokens from it, evaluate the loss exactly on this subset, and make the replacement with the smallest loss.</p>
+<p><em>SEE THE ALGO</em></p>
+<p><code>PLAIN UNDERSTANDING</code></p>
+<p>Imagine if we could change just one word in the text and make it give wrong answers. This algorithm focuses on doing that step by step.</p>
+<p>First, we look at the words in the text that we're allowed to change. We choose the word that, if we change it, would make the language model most confused and give wrong answers.</p>
+<p>Lets now make some smart changes .We pick the one that would make the language model most likely to give wrong answers.</p>
+<p>RELATION with Autoprompt : AutoPrompt picks just one word to change and then replaces it. GCG is a bit smarter because it looks at a few different words that could be changed and picks the best option.</p>
+<h2 id="23-universal-multi-prompt-and-multi-model-attacks">2.3 Universal Multi-prompt and Multi-model attacks</h2>
+<p>Rather than specifying a different subset of modifiable tokens in each prompt, we instead optimize over a single postfix p1:l, and aggregate both the gradient and the loss to select top- k token substitutions and the best replacement at each step, respectively. Before aggregating the gradients, they are clipped to have unit norm. Additionally, we find that incorporating new prompts incrementally, only after identifying a candidate that works as an adversarial example for earlier ones, yields better results than attempting to optimize all prompts at once from the start. This process is shown in Algorithm 2.</p>
+<p>PLAIN TERMS:</p>
+<ol>
+<li>
+<p>Instead of specifying different subsets of tokens to modify for each prompt, a single postfix (a sequence of tokens added to the end) is optimized. The algorithm aggregates gradients and losses for this postfix. Gradients are clipped to have a unit norm before aggregation. This ensures that the optimization process focuses on the most impactful changes.</p>
+</li>
+<li>
+<p>The algorithm incrementally incorporates new prompts during the optimization process. This means that the algorithm starts by focusing on one prompt and identifies a candidate adversarial example. Once a working adversarial example is found for the first prompt, the process includes another prompt, and so on. This incremental approach is found to be more effective than trying to optimize all prompts simultaneously from the start.</p>
+</li>
+<li>
+<p>Transferable Adversarial Examples: To make the adversarial examples transferable across different models, the algorithm incorporates loss functions that involve multiple models</p>
+</li>
+</ol>
+<h2 id="experimental-results">Experimental results</h2>
+<p>Harmful strings</p>
+<p>Harmful behavious</p>
+<h2 id="metrics">Metrics:</h2>
+<p>ASR</p>
+<h2 id="baseline--pez-wen-et-al-2023-gbda-guo-et-al-2021-and-autoprompt-shin-et-al-2020">Baseline : PEZ [Wen et al., 2023], GBDA [Guo et al., 2021], and AutoPrompt [Shin et al., 2020].</h2>
+<h3 id="results">RESULTS</h3>
+<p>See the pdf</p>
+<h3 id="attacks-on-white-boxes">Attacks on white boxes:</h3>
+<pre class="hljs"><code><div>1 behavior/string, 1 model.
+
+25 behavior, 1 model.
+</div></code></pre>
+<h3 id="transfer-attavks">Transfer attavks</h3>
+<p>message = {harmful behavior} (Start with &quot;Sure here’s&quot;)</p>
+<h2 id="discussions">Discussions</h2>
+<ul>
+<li>Are models becoming more robust through alignment?</li>
+</ul>
+<p>&quot;Robust&quot; refers to how well something can withstand challenges or changes without being easily affected or compromised.  When it says &quot;models becoming more robust,&quot; it means that newer models like GPT-4 and Claude 2 are better at resisting or handling adversarial attacks compared to older models like GPT-3.5. They are more resilient and less vulnerable to being tricked or fooled by malicious inputs.
+points :</p>
+<pre class="hljs"><code><div>1. Content Filters and Attack Detection:
+2. Automating Attacks:
+3. Transfer Across Models:
+</div></code></pre>
+<ul>
+<li>
+<p>Are the attacks meaningful?</p>
+</li>
+<li>
+<p>Why did these attacks not yet exist</p>
+</li>
+</ul>
+<p>This part of the work is asking why previous attempts to trick language models were not very successful. The authors think it's because earlier attempts focused on simpler problems like fooling text classifiers, which are different from large language models. Making nonsense text doesn't help show the problem with these models. Now that we have powerful language models, it's possible to show their issues more clearly. The authors believe these attacks are a serious problem that needs to be taken seriously.</p>
+
+</body>
+</html>

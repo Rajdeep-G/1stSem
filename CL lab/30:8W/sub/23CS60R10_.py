@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import random
 from sklearn.metrics.pairwise import cosine_similarity
-
+from collections import defaultdict
 # nltk.download('punkt')
 # nltk.download('wordnet')
 # nltk.download('stopwords')
@@ -143,10 +143,9 @@ def MMR_t4(pagerank_scores,cosine_sim_matrix,processed_sentences,sentences,alpha
         summary_file.write('\n'.join(summary))
     print("'output_MMR.txt' created successfully")
 
-
 #<!...........................END OF PART 2 SUMMARY MMR...............................................!>
 
-with open('input3.txt', 'r') as file:    # Read the document from the input file
+with open('input.txt', 'r') as file:    # Read the document from the input file
     document = file.read()
 # Get the number of sentences to be included in the summary
 print("Enter the number of sentences to be included in the summary(part1): ")
@@ -171,40 +170,46 @@ tfidf_matrix2=tfidf_matrix.T
 
 #<!...........................END OF FUNCTION CALLS of prev part...............................................!>
 
-def cluster_t21(tfidf_matrix, sentences, K, max_iterations=100):
-    # Initialize K centroids randomly
-    random.seed(42)
-    initial_centroids_indices = random.sample(range(tfidf_matrix.shape[0]), K)
-    centroids = tfidf_matrix[initial_centroids_indices]
+def assign_to_clusters(cosine_sim_matrix,tfidf_matrix, centroids):
+    # cluster_assignments = np.argmax(cosine_sim_matrix, axis=1)
+    cluster_assignments=np.argmax(cosine_similarity(tfidf_matrix, centroids), axis=1)
+    return cluster_assignments
 
-    
-    for _ in range(max_iterations): # Perform K-means clustering
-        
-        cosine_similarities = cosine_similarity(tfidf_matrix, centroids) # Assign each sentence to the nearest centroid based on cosine similarity
-        cluster_assignments = np.argmax(cosine_similarities, axis=1)
 
-        
-        new_centroids = np.zeros_like(centroids) # Update centroids by calculating the mean of all points in each cluster
-        for cluster_idx in range(K):
-            cluster_points = tfidf_matrix[cluster_assignments == cluster_idx]
-            if cluster_points.shape[0] > 0:
-                new_centroids[cluster_idx] = np.mean(cluster_points, axis=0)
-
-        
-        if np.all(centroids == new_centroids): # Check for convergence
-            break
-
-        centroids = new_centroids #upd
-
-    
-    clusters = {} # Store cluster assignments
+def update_centroids(tfidf_matrix, cluster_assignments, K):
+    new_centroids = np.zeros((K, tfidf_matrix.shape[1]))
     for cluster_idx in range(K):
-        clusters[cluster_idx] = []
+        cluster_points = tfidf_matrix[cluster_assignments == cluster_idx]
+        if cluster_points.shape[0] > 0:
+            new_centroids[cluster_idx] = np.mean(cluster_points, axis=0)
+    return new_centroids
 
-    for i in range(len(sentences)):
-        cluster_idx = cluster_assignments[i]
-        clusters[cluster_idx].append(sentences[i])
-    
+
+def k_means_clustering(tfidf_matrix, K, cosine_sim_matrix,max_iterations):
+
+    random.seed(42)
+    initial_centroids_indices = random.sample(range(tfidf_matrix.shape[0]), K) # Initialize K centroids randomly
+    centroids = tfidf_matrix[initial_centroids_indices] 
+    for _ in range(max_iterations):
+        cluster_assignments = assign_to_clusters(cosine_sim_matrix,tfidf_matrix, centroids)
+        new_centroids = update_centroids(tfidf_matrix, cluster_assignments, K)
+        
+        if np.all(centroids == new_centroids):
+            break
+        
+        centroids = new_centroids
+    return cluster_assignments
+
+
+
+def clustering_t21(tfidf_matrix, sentences, K, cosine_sim_matrix, max_iterations):
+    cluster_assignments = k_means_clustering(tfidf_matrix, K, cosine_sim_matrix,max_iterations) # Get the cluster assignments for each sentence
+
+    clusters = defaultdict(list)  # Use defaultdict to automatically create lists for clusters
+    # print (clusters)
+    for i in range(len(cluster_assignments)):
+        clusters[cluster_assignments[i]].append(sentences[i]) # Store sentence for each cluster based on the assignment
+
     return clusters
 
 def print_clusters(clusters):
@@ -226,8 +231,8 @@ def print_clusters(clusters):
     print("'output_t21_clusters.txt' created successfully")
 
 
-
-clusters = cluster_t21(tfidf_matrix2, sentences, k, max_iterations=100)
+max_iterations=100
+clusters = clustering_t21(tfidf_matrix2, sentences, k,cosine_sim_matrix, max_iterations)
 print_clusters(clusters)
 
 #<!...........................END OF PART 2 CLUSTERing K means...............................................!>
@@ -275,9 +280,6 @@ def add_bigram(graph, start_node, end_node, s):
         else:
             add_edge(graph,s[i-1],bigram)
     
-
-
-
 def construct_sentence_graph(s1, s2):
     start_node = 'start'
     end_node = 'end'
@@ -300,9 +302,7 @@ def generate_sentence(graph):
 
         if not next_nodes:
             break
-
         next_node = random.choice(next_nodes)
-
         if next_node == 'end':
             break
 
@@ -344,7 +344,6 @@ def print_summary(summary):
     print("'output_t22_summary.txt' created successfully")
 
 
-
 summary,s1_index_track=summary_t22(clusters, sentences,tfidf_matrix.T)
 print_summary(summary)
 
@@ -371,6 +370,8 @@ def print_final_ordered_summary(final_ordering_clusters):
             summary_file.write(f'Cl- {i+1}: {final_ordering_clusters[i]}\n')
             
     print("'output_t23_final_ordered_summary.txt' created successfully")
+
+
 
 final_ordering_clusters=final_ordering(summary,s1_index_track)
 print_final_ordered_summary(final_ordering_clusters)

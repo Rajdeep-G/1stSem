@@ -1,0 +1,4 @@
+Product 0: Qty = 0.0
+Product 1: Qty = 0.0
+Product 2: Qty = 0.0
+Max optimal Profit: 0.0

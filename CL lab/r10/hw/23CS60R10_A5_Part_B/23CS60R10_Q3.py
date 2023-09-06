@@ -6,14 +6,12 @@ def maximize_sweet_box(no_sweets, m, n, x, y, cost):
 
     var = []
     for i in range(no_sweets):
-        var.append(solver.NumVar(0.0, 1.0, 'x_%i' % i))
+        var.append(solver.IntVar(0, 1, 'x_%i' % i))
 
     objective = solver.Objective()
-    cost_per_unit_area = []
+
     for i in range(no_sweets):
-        cost_per_unit_area.append(cost[i] / (x[i] * y[i]))
-    for i in range(no_sweets):
-        objective.SetCoefficient(var[i], cost_per_unit_area[i]*x[i]*y[i]*x[i]*y[i])
+        objective.SetCoefficient(var[i], cost[i])
 
     objective.SetMaximization()
 
@@ -51,17 +49,14 @@ with open('input.txt', 'r') as file:
 
 max_sweet_cost, sweets_used = maximize_sweet_box(no_sweets, m, n, x_cor, y_cor, cost)
 
-print(sweets_used)
-
-
 def print_used_sweets(sweets_used, x_cor, y_cor):
-    for i, count in enumerate(sweets_used):
-        print(f"Size of sweet {i + 1}: {count*x_cor[i]*y_cor[i]}")
+    for i in range(len(sweets_used)):
+        print(f"Size of sweet {i + 1}: {sweets_used[i]*x_cor[i]*y_cor[i]}")
     print(f"Total cost: {max_sweet_cost}")
 
-    with open('Summary_Q3.txt', 'w') as file:
-        for i, count in enumerate(sweets_used):
-            file.write(f"Size of sweet {i + 1}: {count*x_cor[i]*y_cor[i]}\n")
+    with open ('output_Q3.txt', 'w') as file:
+        for i in range(len(sweets_used)):
+            file.write(f"Size of sweet {i + 1}: {sweets_used[i]*x_cor[i]*y_cor[i]}\n")
         file.write(f"Total cost: {max_sweet_cost}")
 
 print_used_sweets(sweets_used, x_cor, y_cor)

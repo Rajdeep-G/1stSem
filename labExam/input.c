@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     }
 
     int no_of_presentations;
-    fscanf(file, "%d", &no_of_presentations);  // reading an integer
+    fscanf(file, "%d", &no_of_presentations); // reading an integer
     printf("%d\n", no_of_presentations);
 
     struct Presentation *presentations = (struct Presentation *)malloc(no_of_presentations * sizeof(struct Presentation));
@@ -42,11 +42,29 @@ int main(int argc, char *argv[])
     for (int i = 0; i < no_of_presentations; i++)
     {
         fscanf(file, "%d %d %d", &presentations[i].start_time, &presentations[i].end_time, &presentations[i].popularity_score); // rading three nos from the line
-        fgets(presentations[i].presentation_name, 100, file); // reading string from a line
+        fgets(presentations[i].presentation_name, 100, file);                                                                   // reading string from a line
     }
-
 
     fclose(file);
 
     return 0;
 }
+
+// void file_print()
+// {
+//     FILE *file = fopen("PartC_output.txt", "w");
+
+//     fprintf(file, "Maximum Total Popularity: %d\n", value);
+//     printf("Maximum Total Popularity: %d\n", value);
+//     fprintf(file, "Selected Presentations: \n");
+//     printf("\n");
+
+//     for (int i = 0; i < no_of_presentations; i++)
+//     {
+//         if (selected_indices2[i] == 1)
+//         {
+//             // printf("%d %d %d %s\n", presentations[i].start_time, presentations[i].end_time, presentations[i].popularity_score, presentations[i].presentation_name);
+//             fprintf(file, "%d %d %d %s", presentations[i].start_time, presentations[i].end_time, presentations[i].popularity_score, presentations[i].presentation_name);
+//         }
+//     }
+// }

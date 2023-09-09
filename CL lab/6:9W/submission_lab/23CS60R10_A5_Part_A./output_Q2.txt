@@ -1,0 +1,4 @@
+Product 0: Qty = 131.99999999999997
+Product 1: Qty = 33.000000000000014
+Product 2: Qty = 1.0
+Max optimal Profit: 18320.0

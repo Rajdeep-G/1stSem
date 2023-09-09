@@ -14,12 +14,13 @@ def optimize_production(no_of_pdt,no_of_res, profits, resource_availability, res
     for j in range(no_of_res):
         total_resource_usage = solver.Sum(production_plan[i] * resource_usage[i][j] for i in range(no_of_pdt))
         solver.Add(total_resource_usage <= resource_availability[j])
+    
     # for j in range(no_of_res):
-    #     resource_constraint = solver.Constraint(0, resource_availability[j])
+    #     ct = solver.Constraint(0, resource_availability[j],"ct")
     #     for i in range(no_of_pdt):
-    #         resource_constraint.SetCoefficient(production_plan[i], resource_usage[i][j])
-    #     solver.Add(resource_constraint)
+    #         ct.SetCoefficient(production_plan[i],resource_usage[i][j])
 
+    
     objective = solver.Objective()
     
     for i in range(no_of_pdt):
@@ -40,16 +41,6 @@ def optimize_production(no_of_pdt,no_of_res, profits, resource_availability, res
 
 
 
-# no_of_pdt=(int)(input())
-# no_of_res=(int)(input())
-# profits = list(map(int,input().split()))
-# res_avail = list(map(int,input().split()))
-
-
-# all_res=[]
-# for i in range(no_of_pdt):
-#     each_res=list(map(int,input().split()))
-#     all_res.append(each_res)
 
 with open('input_Q1.txt', 'r') as file:
     no_of_pdt = int(file.readline())

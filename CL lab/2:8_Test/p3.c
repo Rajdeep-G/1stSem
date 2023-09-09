@@ -49,9 +49,6 @@ void traverse(struct node *head)
     }
 }
 
-// a function that that takes head and n as input.
-// A element is local minima if it is min of its left n elements and right n elements
-// find all such minima for the given n
 void local_minima(struct node *head, int n)
 {
     struct node *temp = head;

@@ -3,7 +3,6 @@
 #include <string.h>
 
 #define MAX_VERTICES 100
-#define INT_MIN -1000000
 
 struct Node // structure for each node in the graph 
 {
@@ -49,67 +48,40 @@ void addEdge(struct Graph *graph, int src, int neighbours) // adding edge to the
 //     }
 // }
 
-int get_ecentricity(struct Graph *graph, int index, int num_of_vertex) // function to add ecentricity for each node
+int check_bipartite(struct Graph *graph, int num_of_vertex)
 {
-    int queue[num_of_vertex];
-    int visited[num_of_vertex];
-    int min_distance_to_each_node[num_of_vertex]; // stores the shortest distance from given node to all the nodes
-    for (int i = 0; i < num_of_vertex; i++)       // initialise
+    char color[num_of_vertex]; // stores the color of each node
+    int queue[num_of_vertex]; // to keep track of each node
+    for (int i = 0; i < num_of_vertex; i++) // initialisation
     {
+        color[i] = 'N';
         queue[i] = -1;
-        visited[i] = -1;
-        min_distance_to_each_node[i] = 0;
     }
-    int front = 0, rear = 0;
-    queue[rear++] = index; // inserting the starting node
-    visited[index] = 1;    // marking it as visited
 
+    int front = 0, rear = 0;
+    queue[rear++] = 0; 
+    color[0] = 'R'; // marking color of first node
     while (front < rear)
     {
         int current = queue[front++];
-        struct Node *currentNode = graph->adj_list[current];
-        while (currentNode) // travelling all the nodes in adj list of that particular node
+        struct Node *currentNode = graph->adj_list[current];// traversing through the adj list of current node
+        while (currentNode != NULL)
         {
-            if (visited[currentNode->vertex] == -1) // checking if already visited or not
+            if (color[currentNode->vertex] == color[current]) // if color is same then not bipartite and return
+                return 0;
+
+            if (color[currentNode->vertex] == 'N') // if not visited yet
             {
-                queue[rear++] = currentNode->vertex;
-                visited[currentNode->vertex] = 1;
-                min_distance_to_each_node[currentNode->vertex] = min_distance_to_each_node[current] + 1;
+                if (color[current] == 'R')
+                    color[currentNode->vertex] = 'B'; // marking the color of the node 
+                else
+                    color[currentNode->vertex] = 'R'; // marking the color of the node
+                queue[rear++] = currentNode->vertex; // adding the node to the queue
             }
-            currentNode = currentNode->next; // pointing to next element in the adj list
+            currentNode = currentNode->next;
         }
     }
-
-    int ecentricity = INT_MIN;
-    for (int i = 0; i < num_of_vertex; i++) // finding the max distance from the given node to all the nodes
-    {
-        if (min_distance_to_each_node[i] > ecentricity)
-            ecentricity = min_distance_to_each_node[i];
-        // printf("%d ", min_distance_to_each_node[i]);
-    }
-    return ecentricity; // returning ecentricity
-}
-
-int find_diameter(struct Graph *graph, int num_of_vertex) // function to calculate diameter
-{
-    int diameter = INT_MIN;
-    int ecentricity[num_of_vertex];// stores the ecentricity of all the nodes
-    for (int i = 0; i < num_of_vertex; i++)
-        ecentricity[i] = 0; // initialiastion
-
-    for (int i = 0; i < num_of_vertex; i++)
-    {
-        // printf("ecentricities are: \n");
-        ecentricity[i] = get_ecentricity(graph, i, num_of_vertex); // calling the function to calculate ecentricity for each node
-        // printf("\n");
-    }
-    //max ecentricity of all nodes = diameter and min ecentricity of all nodes= radius
-    for (int i = 0; i < num_of_vertex; i++) // finding the largest ecentricty cause thats called diameter
-    {
-        if (ecentricity[i] > diameter)
-            diameter = ecentricity[i];
-    }
-    return diameter; // retrunng the diameter
+    return 1; // if all the nodes are visited and no same color is found then return as bipartite
 }
 
 int main(int argc, char const *argv[])
@@ -139,7 +111,7 @@ int main(int argc, char const *argv[])
 
     struct Graph *graph = createGraph(numVertices); // creating the graph
 
-    while (fgets(line, sizeof(line), fptr)) // tokenising the input from the file & storing it in the graph
+    while (fgets(line, sizeof(line), fptr))
     {
         int neighbor;
         char *token = strtok(line, " ");
@@ -151,7 +123,7 @@ int main(int argc, char const *argv[])
             {
                 // printf("token %d ", src);
                 // printf("ne %d ", neighbor);
-                addEdge(graph, src, neighbor); // adding each egde
+                addEdge(graph, src, neighbor); // adding the edge
             }
             c++;
             token = strtok(NULL, " ");
@@ -161,8 +133,12 @@ int main(int argc, char const *argv[])
 
     // printf("Adjacency List:\n");
     // printGraph(graph);
-    int diameter = find_diameter(graph, numVertices); // calling the function to calculate diameter
-    printf("diameter %d\n", diameter);
+
+    int ans = check_bipartite(graph, numVertices); // checking if the graph is bipartite
     fclose(fptr);
+    if (ans == 1) // printing the result
+        printf("Bipartite\n");
+    else
+        printf("Not Bipartite\n");
     return 0;
 }

@@ -1,0 +1,3 @@
+OUTPUT OF MIN COST(of toll both) PATH
+1 -> 3 
+Minimum cost: 4

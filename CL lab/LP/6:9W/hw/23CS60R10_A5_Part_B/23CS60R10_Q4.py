@@ -12,13 +12,10 @@ def maximize_sweet_box(no_sweets, m, n, x, y, cost):
     for i in range(no_sweets):
         cost_per_unit_area.append(cost[i] / (x[i] * y[i]))
     
-    # ct = solver.Constraint(0, m)
-    # ct = solver.Constraint(0, n)
+
     ct = solver.Constraint(0, m * n,"ct")
 
     for i in range(no_sweets):
-        # ct.SetCoefficient(var[i], x[i])
-        # ct.SetCoefficient(var[i], y[i])
         ct.SetCoefficient(var[i], x[i] * y[i])
 
 

@@ -8,15 +8,16 @@ def maximize_sweet_box(no_sweets, m, n, x, y, cost):
     for i in range(no_sweets):
         var.append(solver.IntVar(0, 1, 'x_%i' % i))
 
-    # ct = solver.Constraint(0, m)
-    # ct = solver.Constraint(0, n)
+
     ct = solver.Constraint(0, m * n,"ct")
 
     for i in range(no_sweets):
-        # ct.SetCoefficient(var[i], x[i])
-        # ct.SetCoefficient(var[i], y[i])
         ct.SetCoefficient(var[i], x[i] * y[i])
     
+    for i in range(no_sweets):
+        solver.Add(var[i]*x[i]<=m)
+        solver.Add(var[i]*y[i]<=n)
+
     obj = solver.Objective()
     for i in range(no_sweets):
         obj.SetCoefficient(var[i], cost[i])

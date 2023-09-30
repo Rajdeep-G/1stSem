@@ -3,11 +3,11 @@ from ortools.linear_solver import pywraplp
 
 def optimize_production(no_of_pdt,no_of_res, profits, resource_availability, resource_usage):
 
-    solver = pywraplp.Solver.CreateSolver('GLOP')
+    solver = pywraplp.Solver.CreateSolver('GLOP') #make it scip
 
     production_plan = []
     for i in range(no_of_pdt):
-        production_plan.append(solver.NumVar(0, solver.infinity(), f'var_{i}')) 
+        production_plan.append(solver.NumVar(0, solver.infinity(), f'var_{i}'))  #make it intvar
 
     print(production_plan)
 

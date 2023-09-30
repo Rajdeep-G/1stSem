@@ -7,7 +7,7 @@ def optimize_production(no_of_pdt,no_of_res, profits, resource_availability, res
 
     production_plan = []
     for i in range(no_of_pdt):
-        production_plan.append(solver.NumVar(0, solver.infinity(), f'var_{i}')) #make it IntVar
+        production_plan.append(solver.NumVar(0, solver.infinity(), f'var_{i}')) 
 
     print(production_plan)
 

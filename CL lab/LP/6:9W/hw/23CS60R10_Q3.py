@@ -10,13 +10,20 @@ def maximize_sweet_box(no_sweets, m, n, x, y, cost):
 
 
     ct = solver.Constraint(0, m * n,"ct")
-
     for i in range(no_sweets):
         ct.SetCoefficient(var[i], x[i] * y[i])
     
+    # for i in range(no_sweets):
+    #     solver.Add(var[i]*x[i]<=m)
+    #     solver.Add(var[i]*y[i]<=n)
+
+    ct= solver.Constraint(0, m,"ct")
     for i in range(no_sweets):
-        solver.Add(var[i]*x[i]<=m)
-        solver.Add(var[i]*y[i]<=n)
+        ct.SetCoefficient(var[i], x[i])
+        
+    ct= solver.Constraint(0, n,"ct")
+    for i in range(no_sweets):
+        ct.SetCoefficient(var[i], y[i])
 
     obj = solver.Objective()
     for i in range(no_sweets):
@@ -30,6 +37,7 @@ def maximize_sweet_box(no_sweets, m, n, x, y, cost):
     sweets_used = []
     for i in range(no_sweets):
         if var[i].solution_value() > 0:
+            print('Sweet', i + 1, 'used', var[i].solution_value(), 'times')
             sweets_used.append(var[i].solution_value())
         else:
             sweets_used.append(0)

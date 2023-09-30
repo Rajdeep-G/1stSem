@@ -1,4 +1,5 @@
-Size of sweet 1: 2.0
-Size of sweet 2: 8.0
+Size of sweet 1: 16.0
+Size of sweet 2: 0.0
 Size of sweet 3: 0.0
-Total cost: 25.0
+Size of sweet 4: 1.0
+Total cost: 63.0

@@ -32,3 +32,22 @@ if match:
     print("Title:", title)
 else:
     print("Title not found on the webpage.")
+
+
+    # year=[]
+# count=0
+# for row in soup.findAll('table',class_='sortable wikitable')[0].tbody.findAll('tr'):
+
+#     x=(row.find('td'))
+#     print(x)
+#     patt=re.compile('<td>(.*?)<sup (.*?)')
+#     # print(patt.findall(str(x)))
+#     for i in patt.findall(str(x)):
+#         if i[0] != '':
+#             year.append(i[0])
+
+# final_yr_list=[]
+# for i in range(len(year)-3):
+#         final_yr_list.append(year[i])
+
+# print(final_yr_list)

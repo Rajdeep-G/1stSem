@@ -4,11 +4,10 @@ import urllib.request
 import sqlite3
 import json
 from bs4 import BeautifulSoup
-import re
+import random as rd
 
 def getData(url):
     response = requests.get(url)
-    #convert to text string and return 
     return response.text
 
 def convertJson(data):
@@ -18,12 +17,12 @@ def createDatabaseConnect(dbName):
 	con = sqlite3.connect(dbName)
 	cur = con.cursor()
 	return cur,con
-    
 
-## Now lets get some unstructured data
+########################################################################################################################
+
+
 user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
 url = 'https://en.wikipedia.org/wiki/Summer_Olympic_Games'
-
 req=urllib.request.Request(
     url,
     data=None,
@@ -31,25 +30,142 @@ req=urllib.request.Request(
 
 )
 text=urllib.request.urlopen(req).read().decode('utf-8')
-# print(text)
-# html_doc = getData(url)
-# print(html_doc)
-## it will print 
-## <html>
-## ...
-## which in unstructured data, cannot be converted into json :( 
-## bs4 to the rescue
-# ## see the documentation here: 
+
 soup = BeautifulSoup(text, 'html.parser')
-for table in soup.find_all('table'):
-    print(table.get('class'))
+# for table in soup.find_all('table'):
+#     print(table.get('class'))
 
-texts=soup.find_all('table',class_='sortable wikitable')
-# print(texts[0])
+table=soup.find_all('table',class_='sortable wikitable')[0]
+# print(table)
+alldata_p1=[]
+fixed_url='https://en.wikipedia.org'
+fixed_part=' Summer Olympics'
+for row in table.tbody.find_all('tr')[2:]:
+    td=row.find_all('td')
+    # print(td)
+    try:
+        href=f'{fixed_url}{td[1].a["href"]}'
+        td[0].sup.decompose()
+        year=int(td[0].text)
+        name=td[0].text.strip()+fixed_part
+        host=td[2].text.strip()
+        no_of_athletes=int(td[5].text)
+        if(year<=2020 and year>=1968):
+            data_per_yr=[name,href,year,host,no_of_athletes]
+            alldata_p1.append(data_per_yr)
+
+    except:
+        pass
+# print(alldata_p1)
+k=2
+olympic_info=rd.sample(alldata_p1,k)
 
 
-print("............................")
-for row in soup.findAll('table',class_='sortable wikitable')[0].tbody.findAll('tr'):
-    # first_column = row.findAll('th')[0].contents
-    # third_column = row.findAll('td').contents
-    print(row.findAll('td'))
+########################################################################################################################
+
+def all_countries(soup):
+    table=soup.find_all('table',class_='collapsible')[0]
+    # print(len(table))
+    all_part_countries=[]
+    # print the first table content
+    for row in table.tbody.find_all('tr')[1].td.div.ul.find_all('li'):
+        all_part_countries.append((row.text.split('(')[0]))
+        
+    for i in range(len(all_part_countries)):
+        all_part_countries[i]=all_part_countries[i].replace('\xa0','')
+
+    return all_part_countries
+
+def all_sports(soup):
+    all_sports=[]
+    all_sports2=[]
+    span_tag = soup.find('span', text='Calendar')
+    h3_tag = span_tag.parent
+    second_table = h3_tag.find_next('table').find_next('table')
+
+    for row in second_table.tbody.find_all('tr')[2:]:
+        td=row.find('td')
+        if td is not None:
+            all_sports.append(td.text)
+
+    for i in range(len(all_sports)):
+        all_sports2.append(all_sports[i][0:len(all_sports[i])-2].strip())
+
+    return all_sports2
+
+def rank_top3(soup):
+    table=soup.find_all('table',attrs={'class':['plainrowheaders']})[0]
+    rank=[]
+    for row in table.tbody.find_all('tr')[1:4]:
+        try:
+            th=row.find_all('th')
+            nation_name=th[0].text.strip()
+        except:
+            td=row.find_all('td')
+            nation_name=td[0].text.strip()
+        rank.append(nation_name.split('\xa0')[0])
+
+    return rank
+
+########################################################################################################################
+
+def rem_info(url,olympic_info_year):
+
+    url_sp=url
+    req=urllib.request.Request(
+    url_sp,
+    data=None,
+    headers = {'User-Agent': user_agent}
+    )
+    text=urllib.request.urlopen(req).read().decode('utf-8')
+    soup = BeautifulSoup(text, 'html.parser')
+
+    olympic_info_year.append(all_countries(soup))
+    olympic_info_year.append(all_sports(soup))
+
+    rank=rank_top3(soup)
+    for i in range(3):
+        olympic_info_year.append(rank[i])
+
+
+    return olympic_info_year
+
+########################################################################################################################
+
+
+for i in range(len(olympic_info)):
+    url=olympic_info[i][1]
+    per_yr_info=rem_info(url,olympic_info[i])
+    olympic_info[i]=per_yr_info
+
+print(olympic_info)
+########################################################################################################################
+
+# dbName = 'olympics.db'
+# cursor,conn=createDatabaseConnect(dbName)
+# query = "CREATE TABLE IF NOT EXISTS olympics(Name,WikiURL,year PRIMARY KEY, host, participants,no_atheletes, sports_list,r1,r2,r3)"
+# cursor.execute(query)
+
+# try:
+#     query = "INSERT INTO olympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"
+#     cursor.execute(query)
+# except:
+#     print("this year already exists or some error in the fetching of API has been caused")
+
+# conn.commit()
+
+# query = "SELECT * from city_weather"
+# result = cursor.execute(query)
+# for row in result:
+#     print(row)
+# cursor.close()
+
+# for data in alldata:
+#     if str(data[2])==str(y1):
+#         print(data)
+#         # query = "INSERT INTO olympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"
+#         # cursor.execute(query,data)
+#     if str(data[2])==str(y2):
+#         print(data)
+#         # query = "INSERT INTO olympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"
+#         # cursor.execute(query,data)

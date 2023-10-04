@@ -53,7 +53,7 @@ for row in table.tbody.find_all('tr')[2:]:
         if(year<=2020 and year>=1968):
             data_per_yr=[name,href,year,host,no_of_athletes]
             alldata_p1.append(data_per_yr)
-
+        
     except:
         pass
 # print(alldata_p1)
@@ -141,31 +141,86 @@ for i in range(len(olympic_info)):
 print(olympic_info)
 ########################################################################################################################
 
-# dbName = 'olympics.db'
-# cursor,conn=createDatabaseConnect(dbName)
-# query = "CREATE TABLE IF NOT EXISTS olympics(Name,WikiURL,year PRIMARY KEY, host, participants,no_atheletes, sports_list,r1,r2,r3)"
-# cursor.execute(query)
+# for i in range(10):
+#     print(type(olympic_info[0][i]))
 
-# try:
-#     query = "INSERT INTO olympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"
-#     cursor.execute(query)
-# except:
-#     print("this year already exists or some error in the fetching of API has been caused")
 
-# conn.commit()
+dbName = 'OlympicsData.db'
+cursor,conn=createDatabaseConnect(dbName)
+query = "CREATE TABLE IF NOT EXISTS SummerOlympics(Name,WikiURL,year PRIMARY KEY, host, no_atheletes,participatingNations, sports_list,r1,r2,r3)"
+cursor.execute(query)
 
-# query = "SELECT * from city_weather"
-# result = cursor.execute(query)
-# for row in result:
-#     print(row)
-# cursor.close()
+for i in range(len(olympic_info)):
+    try:
+        Name=olympic_info[i][0]
+        WikiURL=olympic_info[i][1]
+        year=str(olympic_info[i][2])
+        host=olympic_info[i][3]
+        no_atheletes=str(olympic_info[i][4])
+        participatingNations=", ".join(olympic_info[i][5])
+        sports_list=", ".join(olympic_info[i][6])
+        r1=olympic_info[i][7]
+        r2=olympic_info[i][8]
+        r3=olympic_info[i][9]
+        query = "INSERT INTO SummerOlympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"%(Name,WikiURL,year,host,no_atheletes,participatingNations,sports_list,r1,r2,r3)     
+        cursor.execute(query)
+    except:
+        print("this year already exists or some error in the fetching of API has been caused")
 
-# for data in alldata:
-#     if str(data[2])==str(y1):
-#         print(data)
-#         # query = "INSERT INTO olympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"
-#         # cursor.execute(query,data)
-#     if str(data[2])==str(y2):
-#         print(data)
-#         # query = "INSERT INTO olympics VALUES ('%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')"
-#         # cursor.execute(query,data)
+    conn.commit()
+
+
+
+query = "SELECT * from SummerOlympics"
+result = cursor.execute(query)
+for row in result:
+    print(row)
+
+
+########################################################################################################################
+
+# Query 1 What are the years you chose?
+query="SELECT year FROM SummerOlympics"
+result = cursor.execute(query)
+column_data = cursor.fetchall()
+for row in column_data:
+    print(row[0])
+
+
+# Query 2 What is the average number of countries participating in the two olympics?
+query="SELECT participatingNations FROM SummerOlympics"
+result = cursor.execute(query)
+rows = cursor.fetchall()
+
+count=0
+sum=0
+for row in rows: 
+    sum+=len(row[0].split(', '))
+    count+=1
+
+print("average- ",(sum/count))
+
+#Query 3 Print the overlap (i.e., common nations) within <Rank_1_nation, Rank_2_nation and
+# Rank_3_nation> for your chosen two years.
+columns = ['r1', 'r2', 'r3'] 
+query="SELECT r1,r2,r3 FROM SummerOlympics"
+result = cursor.execute(query)
+rows = cursor.fetchall()
+cursor.close()
+
+if len(rows) >= 2:
+    row1 = list(rows[0])
+    row2 = list(rows[1])
+    intersection = []
+
+    for col1, col2 in zip(row1, row2):
+        if col1 == col2:
+            intersection.append(col1)
+
+    print("Intersection values:", intersection)
+else:
+    print("There are not enough rows to find an intersection.")
+
+
+
+

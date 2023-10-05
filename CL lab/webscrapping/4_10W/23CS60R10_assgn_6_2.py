@@ -63,8 +63,15 @@ olympic_info=rd.sample(alldata_p1,k)
 
 ########################################################################################################################
 
-def all_countries(soup):
-    table=soup.find_all('table',class_='collapsible')[0]
+def all_countries(soup,year):
+    if(year==1976):
+        table=soup.find_all('table',class_='collapsible')[1]
+    elif (year==2012):
+        table=soup.find_all('table',class_='wikitable')[1]
+    elif (year==2020):
+        table=soup.find_all('table',class_='wikitable')[2]
+    else:
+        table=soup.find_all('table',class_='collapsible')[0]
     # print(len(table))
     all_part_countries=[]
     # print the first table content
@@ -109,7 +116,7 @@ def rank_top3(soup):
 
 ########################################################################################################################
 
-def rem_info(url,olympic_info_year):
+def rem_info(url,olympic_info_year,olympic_yr):
 
     url_sp=url
     req=urllib.request.Request(
@@ -120,7 +127,7 @@ def rem_info(url,olympic_info_year):
     text=urllib.request.urlopen(req).read().decode('utf-8')
     soup = BeautifulSoup(text, 'html.parser')
 
-    olympic_info_year.append(all_countries(soup))
+    olympic_info_year.append(all_countries(soup,olympic_yr))
     olympic_info_year.append(all_sports(soup))
 
     rank=rank_top3(soup)
@@ -135,7 +142,8 @@ def rem_info(url,olympic_info_year):
 
 for i in range(len(olympic_info)):
     url=olympic_info[i][1]
-    per_yr_info=rem_info(url,olympic_info[i])
+    year=olympic_info[i][2]
+    per_yr_info=rem_info(url,olympic_info[i],year)
     olympic_info[i]=per_yr_info
 
 print(olympic_info)

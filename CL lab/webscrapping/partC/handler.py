@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import random as rd
 import os
 import subprocess
+import time
 
 def getData(url):
     response = requests.get(url)
@@ -129,12 +130,15 @@ def add_initial_data_to_db(all_data,cursor,conn):
     col2='done_not_done'
     for i in range(len(all_data)):
         try:
-            wikiUrl=all_data[i][1]
-            done_not_done=0
-            query=f"INSERT INTO partC ({col1}, {col2}) VALUES ('%s','%s')"%(wikiUrl,done_not_done)
-            cursor.execute(query)
+            # wikiUrl=all_data[i][1]
+            # done_not_done='0'
+            # # query=f"INSERT INTO partC ({col1}, {col2}) VALUES ('%s','%s')"%(wikiUrl,done_not_done)
+            # query=f"INSERT INTO partC ({col1}, {col2}) VALUES ('{wikiUrl}','{done_not_done}')"
+            query="INSERT INTO partC(WikiURL,done_not_done) VALUES(?,?)"
+            cursor.execute(query,(all_data[i][1],'0'))
         except:
-            print("error")
+            pass
+            # print("error 22")
     
     # conn.commit()
 
@@ -150,15 +154,9 @@ def handler_func():
 
     )
     text=urllib.request.urlopen(req).read().decode('utf-8')
-
     soup = BeautifulSoup(text, 'html.parser')
-    # for table in soup.find_all('table'):
-    #     print(table.get('class'))
 
-    k=2
     alldata_p1=initial_data(soup)
-    # print(alldata_p1,sep='\n')
-    # print(len(alldata_p1))
 
     dbName = 'OlympicsData_partC.db'
     cursor,conn=createDatabaseConnect(dbName)
@@ -168,14 +166,26 @@ def handler_func():
     
     add_initial_data_to_db(alldata_p1,cursor,conn)   
 
-    query = "SELECT * from partC"
-    result = cursor.execute(query)
-    for row in result:
-        print(row)
+    # query = "SELECT * from partC"
+    # result = cursor.execute(query)
+    # for row in result:
+    #     print(row)
     conn.commit()
     conn.close()
 
 handler_func()
 
+for _ in range(3):
+    os.system("python scraper.py &")
+# input("Press enter to exit: ")
+time.sleep(5)
+exit()
+
+# subprocesses = []
 # for _ in range(3):
-#     subprocess.Popen(['python', 'scraper.py'])
+#     process = subprocess.Popen(['python', 'scraper.py'])
+#     subprocesses.append(process)
+
+# for process in subprocesses:
+#     process.wait()
+

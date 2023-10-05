@@ -175,7 +175,7 @@ for i in range(len(olympic_info)):
     except:
         print("this year already exists or some error in the fetching of API has been caused")
 
-    conn.commit()
+    # conn.commit()
 
 
 
@@ -191,7 +191,10 @@ for row in result:
 query="SELECT year FROM SummerOlympics"
 result = cursor.execute(query)
 column_data = cursor.fetchall()
+yr=[]
+print("SELECTED YEARS: ")
 for row in column_data:
+    yr.append(row[0])
     print(row[0])
 
 
@@ -199,7 +202,6 @@ for row in column_data:
 query="SELECT participatingNations FROM SummerOlympics"
 result = cursor.execute(query)
 rows = cursor.fetchall()
-
 count=0
 sum=0
 for row in rows: 

@@ -135,7 +135,7 @@ def inserting_data(olym_url):
         if alldata_p1[i][1]==olym_url:
             olympic_yr=alldata_p1[i][2]
             break
-    print(olympic_yr)
+    # print(olympic_yr)
     index=(olympic_yr-1968)//4
     reqd_all_info=rem_info(olym_url,alldata_p1[index],olympic_yr)
     return reqd_all_info

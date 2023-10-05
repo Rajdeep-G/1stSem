@@ -9,6 +9,7 @@ import os
 import subprocess
 import time
 
+
 def getData(url):
     response = requests.get(url)
     return response.text
@@ -97,16 +98,33 @@ def handler_func():
     conn.commit()
     conn.close()
 
+
+########################################################################################################################
+start_time=time.time()
 handler_func()
 i=0
-while i<6:
+while i<5:
     for _ in range(3):
         # if os.system("python scraper.py &")!=-0:
         #     break
-        print(os.system("python scraper.py &"))
+        os.system("python scraper.py &")
     i+=1
+end_time = time.time()
 input("Press enter to exit: ")
 # time.sleep(1)
+
+
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time} seconds")
+
 exit()
+########################################################################################################################
+# start_time=time.time()
+# command = "python scraper.py"
+# handler_func()
 
-
+# # Run the process multiple times
+# for _ in range(14):
+#     subprocess.run(command, shell=True)
+# end_time = time.time()
+# print("Execution time: ",end_time-start_time)

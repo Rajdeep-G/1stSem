@@ -177,7 +177,9 @@ row=cur.fetchone()
 # print(row)
 if row is None:
     conn.close()
-    exit()
+    print("No more rows to be filled")
+    exit(-1)
+
 selected_row_id=row[0]
 cur.execute("SELECT * FROM partC WHERE wikiURL = ?", (selected_row_id,))
 row=cur.fetchone()
@@ -193,12 +195,6 @@ ans=inserting_data(url)
 # print(ans)
 
 insert_into_db(ans,cur,conn)
-
-
-
-
-
-
 
 # query="SELECT * FROM partC"
 # cur.execute(query)

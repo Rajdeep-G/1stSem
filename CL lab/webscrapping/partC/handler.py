@@ -46,82 +46,6 @@ def initial_data(soup):
             pass
     return alldata_p1
 
-########################################################################################################################
-
-def all_countries(soup,year):
-    if(year==1976):
-        table=soup.find_all('table',class_='collapsible')[1]
-    elif (year==2012):
-        table=soup.find_all('table',class_='wikitable')[1]
-    elif (year==2020):
-        table=soup.find_all('table',class_='wikitable')[2]
-    else:
-        table=soup.find_all('table',class_='collapsible')[0]
-    # print(len(table))
-    all_part_countries=[]
-    # print the first table content
-    for row in table.tbody.find_all('tr')[1].td.div.ul.find_all('li'):
-        all_part_countries.append((row.text.split('(')[0]))
-        
-    for i in range(len(all_part_countries)):
-        all_part_countries[i]=all_part_countries[i].replace('\xa0','')
-
-    return all_part_countries
-
-def all_sports(soup):
-    all_sports=[]
-    all_sports2=[]
-    span_tag = soup.find('span', text='Calendar')
-    h3_tag = span_tag.parent
-    second_table = h3_tag.find_next('table').find_next('table')
-
-    for row in second_table.tbody.find_all('tr')[2:]:
-        td=row.find('td')
-        if td is not None:
-            all_sports.append(td.text)
-
-    for i in range(len(all_sports)):
-        all_sports2.append(all_sports[i][0:len(all_sports[i])-2].strip())
-
-    return all_sports2
-
-def rank_top3(soup):
-    table=soup.find_all('table',attrs={'class':['plainrowheaders']})[0]
-    rank=[]
-    for row in table.tbody.find_all('tr')[1:4]:
-        try:
-            th=row.find_all('th')
-            nation_name=th[0].text.strip()
-        except:
-            td=row.find_all('td')
-            nation_name=td[0].text.strip()
-        rank.append(nation_name.split('\xa0')[0])
-
-    return rank
-
-########################################################################################################################
-
-def rem_info(url,olympic_info_year,olympic_yr):
-
-    url_sp=url
-    user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
-    req=urllib.request.Request(
-    url_sp,
-    data=None,
-    headers = {'User-Agent': user_agent}
-    )
-    text=urllib.request.urlopen(req).read().decode('utf-8')
-    soup = BeautifulSoup(text, 'html.parser')
-
-    olympic_info_year.append(all_countries(soup,olympic_yr))
-    olympic_info_year.append(all_sports(soup))
-
-    rank=rank_top3(soup)
-    for i in range(3):
-        olympic_info_year.append(rank[i])
-
-
-    return olympic_info_year
 
 ########################################################################################################################
 
@@ -174,18 +98,15 @@ def handler_func():
     conn.close()
 
 handler_func()
-
-for _ in range(3):
-    os.system("python scraper.py &")
-# input("Press enter to exit: ")
-time.sleep(5)
+i=0
+while i<6:
+    for _ in range(3):
+        # if os.system("python scraper.py &")!=-0:
+        #     break
+        print(os.system("python scraper.py &"))
+    i+=1
+input("Press enter to exit: ")
+# time.sleep(1)
 exit()
 
-# subprocesses = []
-# for _ in range(3):
-#     process = subprocess.Popen(['python', 'scraper.py'])
-#     subprocesses.append(process)
-
-# for process in subprocesses:
-#     process.wait()
 

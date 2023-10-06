@@ -106,11 +106,12 @@ os.system("rm OlympicsData.db")
 start_time=time.time()
 handler_func()
 i=0
-while i<5:
-    for _ in range(3):
-        os.system(f"python scraper.py {start_time} & ")
-    i+=1
-time.sleep(10)
+
+for i in range(1):
+# for _ in range(3):
+    os.system(f"python scraper.py {start_time} & ")
+    # i+=1
+time.sleep(30)
 
 time_all=[]
 with open('execution_time.txt','r') as f:
@@ -120,21 +121,8 @@ with open('execution_time.txt','r') as f:
 # delete the above file
 os.system("rm execution_time.txt")
 
-print("Execution time (PARALLEL) ",max(time_all)," seconds")
+print("Execution time ->  ",max(time_all)," seconds")
 exit()
-
-########################################################################################################################
-
-# start_time=time.time()
-# handler_func()
-# command = f"python scraper.py {start_time}"
-
-# for _ in range(10):
-#     os.system(command)
-
-# end_time = time.time()
-# execution_time = end_time - start_time
-# print(f"Execution time: (SEQUENTIAL) {execution_time} seconds")
 
 ########################################################################################################################
 

@@ -171,41 +171,45 @@ def insert_into_db(all_data,cur,conn):
 dbName='OlympicsData.db'
 cur,conn=createDatabaseConnect(dbName)
 
-query = "SELECT wikiURL FROM SummerOlympics WHERE done_not_done = '0' LIMIT 1"
-cur.execute(query)
-row=cur.fetchone()
-# print(row)
-if row is None:
-    conn.close()
-    print("No more rows to be filled")
-    # os.waitstatus_to_exitcode(0)
-    exit(1)
+def multi_p():
 
-selected_row_id=row[0]
-cur.execute("SELECT * FROM SummerOlympics WHERE wikiURL = ?", (selected_row_id,))
-row=cur.fetchone()
+    query = "SELECT wikiURL FROM SummerOlympics WHERE done_not_done = '0' LIMIT 1"
+    cur.execute(query)
+    row=cur.fetchone()
+    # print(row)
+    if row is None:
+        conn.close()
+        print("No more rows to be filled")
+        conn.close()
+        start_time=float(sys.argv[1])
+        ex_time=time.time()-start_time
+        print(ex_time)
+        with open("execution_time.txt", "a") as f:
+            f.write(str(ex_time)+"\n")
+        exit()
+
+    selected_row_id=row[0]
+    cur.execute("SELECT * FROM SummerOlympics WHERE wikiURL = ?", (selected_row_id,))
+    row=cur.fetchone()
 
 
-cur.execute("UPDATE SummerOlympics SET done_not_done = '1' WHERE wikiURL = ?", (selected_row_id,))
-conn.commit()
+    cur.execute("UPDATE SummerOlympics SET done_not_done = '1' WHERE wikiURL = ?", (selected_row_id,))
+    conn.commit()
 
 
-url=row[1]
-print(url)
-ans=inserting_data(url)
-# print(ans)
-insert_into_db(ans,cur,conn)
+    url=row[1]
+    print(url)
+    ans=inserting_data(url)
+    # print(ans)
+    insert_into_db(ans,cur,conn)
 
-# query="SELECT * FROM partC"
-# cur.execute(query)
-# row=cur.fetchall()
-# print(row)
+    # query="SELECT * FROM partC"
+    # cur.execute(query)
+    # row=cur.fetchall()
+    # print(row)
 
-conn.close()
-start_time=float(sys.argv[1])
-ex_time=time.time()-start_time
-print(ex_time)
-with open("execution_time.txt", "a") as f:
-    f.write(str(ex_time)+"\n")
+while True:
+    multi_p()
+    
 
-exit(0)
+########################################################################################################################

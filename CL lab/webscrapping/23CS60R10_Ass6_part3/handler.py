@@ -56,7 +56,7 @@ def add_initial_data_to_db(all_data,cursor,conn):
     col2='done_not_done'
     for i in range(len(all_data)):
         try:
-            query="INSERT INTO partC(WikiURL,done_not_done) VALUES(?,?)"
+            query="INSERT INTO SummerOlympics(WikiURL,done_not_done) VALUES(?,?)"
             cursor.execute(query,(all_data[i][1],'0'))
         except:
             pass
@@ -80,9 +80,9 @@ def handler_func():
 
     alldata_p1=initial_data(soup)
 
-    dbName = 'OlympicsData_partC.db'
+    dbName = 'OlympicsData.db'
     cursor,conn=createDatabaseConnect(dbName)
-    query = "CREATE TABLE IF NOT EXISTS partC(Name,WikiURL PRIMARY KEY,year, host, no_atheletes,participatingNations, sports_list,r1,r2,r3,done_not_done)"
+    query = "CREATE TABLE IF NOT EXISTS SummerOlympics(Name,WikiURL PRIMARY KEY,year, host, no_atheletes,participatingNations, sports_list,r1,r2,r3,done_not_done)"
     cursor.execute(query)
     conn.commit()
     
@@ -98,7 +98,7 @@ def handler_func():
 
 ########################################################################################################################
 
-os.system("rm OlympicsData_partC.db")
+os.system("rm OlympicsData.db")
 
 
 ########################################################################################################################

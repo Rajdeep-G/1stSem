@@ -6,12 +6,12 @@ def createDatabaseConnect(dbName):
 	return cur,con
 
 
-dbName = 'OlympicsData_partC.db'
+dbName = 'OlympicsData.db'
 cursor,conn=createDatabaseConnect(dbName)
 
 
 # check if all the values in done_not_done column are 1
-query = "SELECT done_not_done from partC"
+query = "SELECT done_not_done from SummerOlympics"
 result = cursor.execute(query)
 c=0
 for row in result:
@@ -27,7 +27,7 @@ if c==0:
 
 
 # QUERY1 :What are the years you chose?
-query = "SELECT year from partC"
+query = "SELECT year from SummerOlympics"
 result = cursor.execute(query)
 column_data = cursor.fetchall()
 print("\nThe years you chose are:")
@@ -37,7 +37,7 @@ print()
 
 ########################################################################################################################
 # QUERY2 :Which country was with in top3 for the maximum time in your database?
-query = "SELECT r1,r2,r3 from partC"
+query = "SELECT r1,r2,r3 from SummerOlympics"
 result = cursor.execute(query)
 rows = cursor.fetchall()
 allCountries = []
@@ -52,7 +52,7 @@ print("\nThe top most countries are: ",top3[0][0])
 
 ########################################################################################################################
 # QUERY3 :What is the average number of athletes
-query = "SELECT no_atheletes from partC"
+query = "SELECT no_atheletes from SummerOlympics"
 result = cursor.execute(query)
 rows = cursor.fetchall()
 count=0

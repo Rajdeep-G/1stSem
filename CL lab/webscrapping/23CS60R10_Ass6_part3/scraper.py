@@ -156,7 +156,7 @@ def insert_into_db(all_data,cur,conn):
         r1=all_data[7]
         r2=all_data[8]
         r3=all_data[9]
-        query=f"UPDATE partC SET Name='{Name}', year='{year}', host='{host}', no_atheletes='{no_atheletes}', participatingNations='{participatingNations}', sports_list='{sports_list}', r1='{r1}', r2='{r2}', r3='{r3}' WHERE WikiURL='{all_data[1]}'"
+        query=f"UPDATE SummerOlympics SET Name='{Name}', year='{year}', host='{host}', no_atheletes='{no_atheletes}', participatingNations='{participatingNations}', sports_list='{sports_list}', r1='{r1}', r2='{r2}', r3='{r3}' WHERE WikiURL='{all_data[1]}'"
         cur.execute(query)
 
     except:
@@ -168,10 +168,10 @@ def insert_into_db(all_data,cur,conn):
 
 
 
-dbName='OlympicsData_partC.db'
+dbName='OlympicsData.db'
 cur,conn=createDatabaseConnect(dbName)
 
-query = "SELECT wikiURL FROM partC WHERE done_not_done = '0' LIMIT 1"
+query = "SELECT wikiURL FROM SummerOlympics WHERE done_not_done = '0' LIMIT 1"
 cur.execute(query)
 row=cur.fetchone()
 # print(row)
@@ -182,11 +182,11 @@ if row is None:
     exit(1)
 
 selected_row_id=row[0]
-cur.execute("SELECT * FROM partC WHERE wikiURL = ?", (selected_row_id,))
+cur.execute("SELECT * FROM SummerOlympics WHERE wikiURL = ?", (selected_row_id,))
 row=cur.fetchone()
 
 
-cur.execute("UPDATE partC SET done_not_done = '1' WHERE wikiURL = ?", (selected_row_id,))
+cur.execute("UPDATE SummerOlympics SET done_not_done = '1' WHERE wikiURL = ?", (selected_row_id,))
 conn.commit()
 
 

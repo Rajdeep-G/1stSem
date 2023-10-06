@@ -7,10 +7,10 @@ def createDatabaseConnect(dbName):
 	return cur,con
 
 
-dbName = 'OlympicsData_partC.db'
+dbName = 'OlympicsData.db'
 cursor,conn=createDatabaseConnect(dbName)
 
-query = "SELECT * from partC"
+query = "SELECT * from SummerOlympics"
 result = cursor.execute(query)
 for row in result:
     print(row, end="\n\n")

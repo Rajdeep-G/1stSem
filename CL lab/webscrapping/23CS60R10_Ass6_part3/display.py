@@ -1,9 +1,5 @@
 
 import sqlite3
-import json
-from bs4 import BeautifulSoup
-import random as rd
-
 
 def createDatabaseConnect(dbName):
 	con = sqlite3.connect(dbName)

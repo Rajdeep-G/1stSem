@@ -46,11 +46,8 @@ for row in rows:
         allCountries.append(row[i])
 
 counter = Counter(allCountries)
-top3 = counter.most_common(3)
-print("\nThe top 3 countries are:")
-for i in range(3):
-    print(top3[i][0], end="\n")
-
+top3 = counter.most_common(1)
+print("\nThe top most countries are: ",top3[0][0])
 
 
 ########################################################################################################################

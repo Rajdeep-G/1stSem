@@ -1,7 +1,7 @@
-With parallel processes ( 3 at a time)
+With parallel processes ( 3 parallel process )
 Time taken: 4.437541723251343 seconds
 
-Without parallel processes (in a for loop, each row is processed one by one)
+Without parallel processes (in a for loop, each row is processed sequentially)
 25.173747301101685 seconds
 
 Speedup = 25.173747301101685/4.437541723251343 = 5.67

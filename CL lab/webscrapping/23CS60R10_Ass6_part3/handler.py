@@ -107,8 +107,8 @@ start_time=time.time()
 handler_func()
 i=0
 
-for i in range(1):
-# for _ in range(3):
+# for _ in range(1): #for single process
+for _ in range(3): #for multiple process 
     os.system(f"python scraper.py {start_time} & ")
     # i+=1
 time.sleep(30)

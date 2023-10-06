@@ -5,3 +5,17 @@ Without parallel processes (in a for loop, each row is processed sequentially)
 21.454245805740356 seconds
 
 Speedup = 21.454245805740356 / 8.988654851913452 = 2.39
+
+
+
+............................................................................
+
+
+
+How to run the code : 
+1. Run the handler.py file 
+2. From the handler file, processes will be created which will execute the code of scaper.py which does all the 
+extracting of data and fills in the database
+[Note- you can alter the line  110-111 for the multi process execution time vs single process execution time]
+3.The checker.py is for the queries as mentioned in the problem statement
+4. The display.py is a additional file for just displaying the data in the database

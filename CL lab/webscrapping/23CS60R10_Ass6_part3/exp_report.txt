@@ -1,12 +1,20 @@
-With parallel processes ( 3 parallel process )
+Experimental Setup & Results
+.............................................................................
+
+With parallel processes ( 3 parallel process calling the scrapper.py file and filling up the database 
+as long as it can find done_not_done column is 0)
 Time taken: 8.988654851913452 seconds
 
 Without parallel processes (in a for loop, each row is processed sequentially)
 21.454245805740356 seconds
 
-Speedup = 21.454245805740356 / 8.988654851913452 = 2.39
+Ratio = 21.454245805740356 / 8.988654851913452 = 2.39
 
+Percentage Speedup = (21.454245805740356 - 8.988654851913452) / 21.454245805740356 * 100
+Percentage Speedup ≈ (12.465590953826904 / 21.454245805740356) * 100
+Percentage Speedup ≈ 0.581635116 * 100
 
+Percentage Speedup ≈ 58.16%  
 
 ............................................................................
 

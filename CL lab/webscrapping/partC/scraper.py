@@ -6,6 +6,8 @@ import json
 from bs4 import BeautifulSoup
 import random as rd
 import os
+import sys
+import time
 import subprocess
 
 def createDatabaseConnect(dbName):
@@ -164,12 +166,10 @@ def insert_into_db(all_data,cur,conn):
 
 ########################################################################################################################
 
+
+
 dbName='OlympicsData_partC.db'
 cur,conn=createDatabaseConnect(dbName)
-# query="SELECT * FROM partC"
-# cur.execute(query)
-# row=cur.fetchall()
-# print(row)
 
 query = "SELECT wikiURL FROM partC WHERE done_not_done = '0' LIMIT 1"
 cur.execute(query)
@@ -178,7 +178,8 @@ row=cur.fetchone()
 if row is None:
     conn.close()
     print("No more rows to be filled")
-    exit(-1)
+    # os.waitstatus_to_exitcode(0)
+    exit(1)
 
 selected_row_id=row[0]
 cur.execute("SELECT * FROM partC WHERE wikiURL = ?", (selected_row_id,))
@@ -193,7 +194,6 @@ url=row[1]
 print(url)
 ans=inserting_data(url)
 # print(ans)
-
 insert_into_db(ans,cur,conn)
 
 # query="SELECT * FROM partC"
@@ -202,3 +202,10 @@ insert_into_db(ans,cur,conn)
 # print(row)
 
 conn.close()
+start_time=float(sys.argv[1])
+ex_time=time.time()-start_time
+print(ex_time)
+with open("execution_time.txt", "a") as f:
+    f.write(str(ex_time)+"\n")
+
+exit(0)

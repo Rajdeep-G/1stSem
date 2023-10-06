@@ -51,19 +51,16 @@ def initial_data(soup):
 ########################################################################################################################
 
 def add_initial_data_to_db(all_data,cursor,conn):
+    all_data=rd.sample(all_data,10)
     col1='WikiURL'
     col2='done_not_done'
     for i in range(len(all_data)):
         try:
-            # wikiUrl=all_data[i][1]
-            # done_not_done='0'
-            # # query=f"INSERT INTO partC ({col1}, {col2}) VALUES ('%s','%s')"%(wikiUrl,done_not_done)
-            # query=f"INSERT INTO partC ({col1}, {col2}) VALUES ('{wikiUrl}','{done_not_done}')"
             query="INSERT INTO partC(WikiURL,done_not_done) VALUES(?,?)"
             cursor.execute(query,(all_data[i][1],'0'))
         except:
             pass
-            # print("error 22")
+
     
     # conn.commit()
 
@@ -100,31 +97,44 @@ def handler_func():
 
 
 ########################################################################################################################
+
+os.system("rm OlympicsData_partC.db")
+
+
+########################################################################################################################
+
 start_time=time.time()
 handler_func()
 i=0
 while i<5:
     for _ in range(3):
-        # if os.system("python scraper.py &")!=-0:
-        #     break
-        os.system("python scraper.py &")
+        os.system(f"python scraper.py {start_time} & ")
     i+=1
-end_time = time.time()
-input("Press enter to exit: ")
-# time.sleep(1)
+time.sleep(10)
 
+time_all=[]
+with open('execution_time.txt','r') as f:
+    for line in f:
+        time_all.append(float(line.strip()))
 
-execution_time = end_time - start_time
-print(f"Execution time: {execution_time} seconds")
+# delete the above file
+os.system("rm execution_time.txt")
 
+print("Execution time (PARALLEL) ",max(time_all)," seconds")
 exit()
-########################################################################################################################
-# start_time=time.time()
-# command = "python scraper.py"
-# handler_func()
 
-# # Run the process multiple times
-# for _ in range(14):
-#     subprocess.run(command, shell=True)
+########################################################################################################################
+
+# start_time=time.time()
+# handler_func()
+# command = f"python scraper.py {start_time}"
+
+# for _ in range(10):
+#     os.system(command)
+
 # end_time = time.time()
-# print("Execution time: ",end_time-start_time)
+# execution_time = end_time - start_time
+# print(f"Execution time: (SEQUENTIAL) {execution_time} seconds")
+
+########################################################################################################################
+

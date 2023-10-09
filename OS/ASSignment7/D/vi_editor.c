@@ -1,11 +1,12 @@
-// vi_editor.c
+// #include "vi_editor.h"
+#define CTRL_KEY(k) ((k)&0x1f) // Macro to handle Ctrl key combinations
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
 #include "vi_editor.h"
-#define CTRL_KEY(k) ((k)&0x1f) // Macro to handle Ctrl key combinations
 
 // Structure to represent a single line of text
 typedef struct
@@ -25,6 +26,9 @@ typedef struct
 Buffer text_buffer;
 int cursor_x, cursor_y;
 int screen_rows, screen_cols;
+int num_lines_modified = 0;
+int num_words_modified = 0;
+int num_chars_modified = 0;
 
 // Function to initialize the text buffer
 void init_buffer()
@@ -43,7 +47,7 @@ void append_line(char *str, int length)
     line->chars[length] = '\0';
     line->length = length;
     text_buffer.num_lines++;
-}
+}\
 
 // Function to insert a character at the cursor position
 void insert_char(char c)
@@ -54,6 +58,7 @@ void insert_char(char c)
     line->chars[cursor_x] = c;
     line->length++;
     cursor_x++;
+    num_chars_modified++;
 }
 
 // Function to delete the character at the cursor position
@@ -65,6 +70,7 @@ void delete_char()
     Line *line = &text_buffer.lines[cursor_y];
     memmove(&line->chars[cursor_x], &line->chars[cursor_x + 1], line->length - cursor_x);
     line->length--;
+    num_chars_modified--;
 }
 
 // Function to save the buffer to a file
@@ -83,6 +89,10 @@ void save_buffer(const char *filename)
     }
 
     fclose(file);
+
+    printf("Number of lines modified: %d\n", num_lines_modified);
+    printf("Number of words modified: %d\n", num_words_modified);
+    printf("Number of characters modified: %d\n", num_chars_modified);
 }
 
 // Function to draw the screen
@@ -98,7 +108,7 @@ void draw_screen()
             if (text_buffer.num_lines == 0 && i == screen_rows / 3)
             {
                 char welcome[80];
-                snprintf(welcome, sizeof(welcome), "Text Editor - Press Ctrl+Q to exit");
+                snprintf(welcome, sizeof(welcome), "Text Editor - Press Ctrl+X to save and exit");
                 mvprintw(screen_rows / 3, (screen_cols - strlen(welcome)) / 2, welcome);
             }
             else
@@ -159,21 +169,17 @@ void process_keypress()
     case KEY_DC: // Delete key
         delete_char();
         break;
-    case '\x1b': // Escape key (ESC)
-        // Close the editor
-        endwin();
-        exit(0);
+    case '\n': // Enter key
+        // Implement line splitting if needed
         break;
-    case CTRL_KEY('s'): // Ctrl+S to save
+    // case CTRL('X'):
+    case CTRL_KEY('x'):
+        // Save and exit
         save_buffer("output.txt");
-        break;
-    case CTRL_KEY('x'): // Ctrl+X to exit
-        // Close the editor
         endwin();
         exit(0);
         break;
     default:
-        // Insert the character at the cursor position
         insert_char(ch);
         break;
     }

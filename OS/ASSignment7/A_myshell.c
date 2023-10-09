@@ -46,7 +46,11 @@ int execute_command(char *command)
         // rintf("Inside CHild\n");
         if (strcmp(input[0], "cd") == 0)
         {
-            chdir(input[1]);
+            if (chdir(input[1]) == -1)
+            {
+                perror("chdir failed");
+                exit(1);
+            }
         }
         else if (execvp(input[0], input) == -1)
         {

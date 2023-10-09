@@ -19,78 +19,99 @@ int execute_piped_command(char *command)
     }
     input[count] = NULL;
 
-    // remove all leading and trailing spaces from the input
-    for (int i = 0; i < count; i++)
-    {
-        int j = 0;
-        while (input[i][j] == ' ')
-            j++;
-        int k = strlen(input[i]) - 1;
-        while (input[i][k] == ' ')
-            k--;
-        for (int l = j; l <= k; l++)
-            input[i][l - j] = input[i][l];
-        input[i][k - j + 1] = '\0';
-    }
+    // check for the last command
+    char *last_command = input[count - 1];
+    // for this last command check if it has a &
+    int bg_process_flag = 0;
+
+    // Create an array to store file descriptors for pipes
+    int pipe_fds[count - 1][2];
 
     for (int i = 0; i < count; i++)
     {
-        printf("%s\n", input[i]);
-    }
-    printf("%d", count);
-// .........
-    int prev_pipe_read = -1;
-    // int fd[2];
-    // pipe(fd);
-
-    for (int i = 0; i < count; i++)
-    {
-        int fd[2];
-        pipe(fd);
+        // Trim leading and trailing spaces from each command
+        char *cmd = input[i];
+        while (*cmd == ' ')
+            cmd++;
+        int len = strlen(cmd);
+        while (len > 0 && cmd[len - 1] == ' ')
+            cmd[--len] = '\0';
+        // ...............................................................
+        // Tokenize the command into arguments
+        char *parameter[1000];
+        int no_param = 0;
+        token = strtok(cmd, " ");
+        while (token != NULL)
+        {
+            parameter[no_param++] = token;
+            token = strtok(NULL, " ");
+        }
+        parameter[no_param] = NULL;
+        // ...............................................................
+        // check for the last command
+        int bg_process_flag = 0;
+        if (i == count - 1)
+        {
+            if (parameter[no_param - 1][strlen(parameter[no_param - 1]) - 1] == '&')
+            {
+                bg_process_flag = 1;
+                parameter[no_param - 1][strlen(parameter[no_param - 1]) - 1] = '\0';
+                if (strcmp(parameter[no_param - 1], "") == 0)
+                {
+                    no_param -= 1;
+                    parameter[no_param] = NULL;
+                }
+            }
+        }
+        if (i < count - 1)
+        {
+            // If not the last command, create all pipes
+            if (pipe(pipe_fds[i]) == -1)
+            {
+                perror("Pipe failed");
+                exit(1);
+            }
+        }
 
         pid_t child_pid;
         child_pid = fork(); // Create a child process
-
         if (child_pid == -1)
         {
             perror("Fork failed");
             exit(1);
         }
-
         if (child_pid == 0)
         {
-            // Child process
-
-            // Close the read end of the previous pipe (if any)
-            if (prev_pipe_read != -1)
-            {
-                close(prev_pipe_read);
-            }
-
-            // Redirect the standard input if not the first command
             if (i > 0)
             {
-                dup2(prev_pipe_read, STDIN_FILENO);
-                close(prev_pipe_read);
+                // Connect stdin to the read end of the previous pipe
+                dup2(pipe_fds[i - 1][0], STDIN_FILENO);
+                close(pipe_fds[i - 1][0]);
             }
-
-            // Redirect the standard output to the write end of the pipe
-            dup2(fd[1], STDOUT_FILENO);
-            close(fd[0]);
-            close(fd[1]);
- 
-            char *command = input[i];
-            char *args[100];
-            int arg_count = 0;
-            char *arg_token = strtok(command, " ");
-            while (arg_token != NULL)
+            if (i < count - 1)
             {
-                args[arg_count++] = arg_token;
-                arg_token = strtok(NULL, " ");
+                // Connect stdout to the write end of the current pipe
+                dup2(pipe_fds[i][1], STDOUT_FILENO);
+                close(pipe_fds[i][1]);
             }
-            args[arg_count] = NULL;
 
-            if (execvp(args[0], args) == -1)
+            // Close all other pipe file descriptors
+            // for (int j = 0; j < count - 1; j++)
+            // {
+            //     close(pipe_fds[j][0]);
+            //     close(pipe_fds[j][1]);
+            // }
+
+            // Execute the command
+            if (strcmp(parameter[0], "cd") == 0)
+            {
+                if (chdir(parameter[1]) == -1)
+                {
+                    perror("chdir failed");
+                    exit(1);
+                }
+            }
+            else if (execvp(parameter[0], parameter) == -1)
             {
                 perror("execvp failed");
                 exit(1);
@@ -98,25 +119,27 @@ int execute_piped_command(char *command)
         }
         else
         {
-            // Parent process
-            // Close the write end of the pipe
-            close(fd[1]);
-            // Close the read end of the previous pipe (if any)
-            if (prev_pipe_read != -1)
-                close(prev_pipe_read);
-
-            // Store the read end of the current pipe as the previous for the next iteration
-            prev_pipe_read = fd[0];
-
-            waitpid(child_pid, NULL, 0);
+            // Close the write end of the current pipe (if not the last command)
+            if (i < count - 1)
+            {
+                close(pipe_fds[i][1]);
+            }
+            // Wait for the child process
+            if (bg_process_flag != 1)
+            {
+                int status;
+                waitpid(child_pid, &status, 0);
+            }
         }
     }
 
-    // Close the last read end of the pipe
-    if (prev_pipe_read != -1)
+    // Close all pipe file descriptors
+    for (int i = 0; i < count - 1; i++)
     {
-        close(prev_pipe_read);
+        close(pipe_fds[i][0]);
+        close(pipe_fds[i][1]);
     }
+
     return 0;
 }
 

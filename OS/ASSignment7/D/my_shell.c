@@ -1,3 +1,4 @@
+#include "vi_editor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,127 +8,14 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-int execute_piped_command(char *command)
-{
-    char *input[1000];
-    int count = 0;
-    char *token = strtok(command, "|");
-    while (token != NULL)
-    {
-        input[count++] = token;
-        token = strtok(NULL, "|");
-    }
-    input[count] = NULL;
-
-    // remove all leading and trailing spaces from the input
-    for (int i = 0; i < count; i++)
-    {
-        int j = 0;
-        while (input[i][j] == ' ')
-            j++;
-        int k = strlen(input[i]) - 1;
-        while (input[i][k] == ' ')
-            k--;
-        for (int l = j; l <= k; l++)
-            input[i][l - j] = input[i][l];
-        input[i][k - j + 1] = '\0';
-    }
-
-    for (int i = 0; i < count; i++)
-    {
-        printf("%s\n", input[i]);
-    }
-    printf("%d", count);
-// .........
-    int prev_pipe_read = -1;
-    // int fd[2];
-    // pipe(fd);
-
-    for (int i = 0; i < count; i++)
-    {
-        int fd[2];
-        pipe(fd);
-
-        pid_t child_pid;
-        child_pid = fork(); // Create a child process
-
-        if (child_pid == -1)
-        {
-            perror("Fork failed");
-            exit(1);
-        }
-
-        if (child_pid == 0)
-        {
-            // Child process
-
-            // Close the read end of the previous pipe (if any)
-            if (prev_pipe_read != -1)
-            {
-                close(prev_pipe_read);
-            }
-
-            // Redirect the standard input if not the first command
-            if (i > 0)
-            {
-                dup2(prev_pipe_read, STDIN_FILENO);
-                close(prev_pipe_read);
-            }
-
-            // Redirect the standard output to the write end of the pipe
-            dup2(fd[1], STDOUT_FILENO);
-            close(fd[0]);
-            close(fd[1]);
- 
-            char *command = input[i];
-            char *args[100];
-            int arg_count = 0;
-            char *arg_token = strtok(command, " ");
-            while (arg_token != NULL)
-            {
-                args[arg_count++] = arg_token;
-                arg_token = strtok(NULL, " ");
-            }
-            args[arg_count] = NULL;
-
-            if (execvp(args[0], args) == -1)
-            {
-                perror("execvp failed");
-                exit(1);
-            }
-        }
-        else
-        {
-            // Parent process
-            // Close the write end of the pipe
-            close(fd[1]);
-            // Close the read end of the previous pipe (if any)
-            if (prev_pipe_read != -1)
-                close(prev_pipe_read);
-
-            // Store the read end of the current pipe as the previous for the next iteration
-            prev_pipe_read = fd[0];
-
-            waitpid(child_pid, NULL, 0);
-        }
-    }
-
-    // Close the last read end of the pipe
-    if (prev_pipe_read != -1)
-    {
-        close(prev_pipe_read);
-    }
-    return 0;
-}
-
 int execute_command(char *command)
 {
 
     if (strstr(command, "|"))
     {
         // If the command contains a pipe character, execute as piped command
-        execute_piped_command(command);
-        // printf("Piped commands not supported yet\n");
+        // execute_piped_command(command);
+        printf("Piped commands not supported yet\n");
     }
     else
     {
@@ -154,6 +42,38 @@ int execute_command(char *command)
             }
         }
 
+        if (strcmp(input[0], "vi") == 0)
+        {
+            if (input[1] != NULL)
+            {
+                pid_t child_pid;
+                child_pid = fork();
+                if (child_pid == -1)
+                {
+                    perror("Fork failed");
+                    exit(1);
+                }
+                if (child_pid == 0)
+                {
+                    // Execute the Vi editor with the specified filename
+                    execlp("./vi_editor", "vi_editor", input[1], NULL);
+                    perror("execlp failed");
+                    exit(1);
+                }
+                else
+                {
+                    if (bg_process_flag != 1)
+                    {
+                        int status;
+                        waitpid(child_pid, &status, 0);
+                    }
+                }
+            }
+            else
+            {
+                printf("Usage: vi <filename>\n");
+            }
+        }
         pid_t child_pid;
         child_pid = fork(); // Create a child process
         if (child_pid == -1)
@@ -224,6 +144,14 @@ int main()
         {
 
             add_history(user_input); // Add the input to the command history.
+
+            // if (strncmp(user_input, "vi ", 3) == 0)
+            // {
+            //     // User wants to open Vi editor with a file, e.g., "vi filename"
+            //     char *filename = user_input + 3; // Extract filename
+            //     // Launch the Vi editor to edit the specified file
+            //     vi_editor(filename);
+            // }
             if (strcmp(user_input, "exit") == 0)
             {
                 free(user_input);

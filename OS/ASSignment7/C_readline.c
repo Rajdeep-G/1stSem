@@ -9,7 +9,7 @@
 
 int execute_command(char *command)
 {
-    
+
     if (strstr(command, "|"))
     {
         // If the command contains a pipe character, execute as piped command
@@ -77,30 +77,49 @@ int execute_command(char *command)
 }
 
 
+void modification_for_multi_line(char *user_input)
+{
+    while (strlen(user_input) > 0 && user_input[strlen(user_input) - 1] == '\\')
+    {
+        user_input[strlen(user_input) - 1] = '\0';
+        char *next_line = readline("> ");
+        if (next_line != NULL)
+        {
+            user_input = realloc(user_input, strlen(user_input) + strlen(next_line) + 1);
+            strcat(user_input, next_line);
+            free(next_line);
+        }
+        else
+            break; 
+    }
 
+}
 
-
-
-int main() {
+int main()
+{
     char *user_input = NULL;
 
-    while (1) {
+    while (1)
+    {
         user_input = readline("Myshell> ");
-        if (!user_input) {
-            // Handle Ctrl+D (EOF) to exit gracefully.
+        if (!user_input)
+        {
             printf("\n");
             free(user_input);
             return 0;
         }
 
-        if (strlen(user_input) > 0) {
-            // Add the input to the command history.
-            add_history(user_input);
-
-            if (strcmp(user_input, "exit") == 0) {
+        if (strlen(user_input) > 0)
+        {
+            
+            add_history(user_input);  // Add the input to the command history.
+            if (strcmp(user_input, "exit") == 0)
+            {
                 free(user_input);
                 return 0;
-            } else if (strcmp(user_input, "help") == 0) {
+            }
+            else if (strcmp(user_input, "help") == 0)
+            {
                 printf("Available commands:\n");
                 printf("1. pwd - shows the present working directory\n");
                 printf("2. cd <directory_name> - changes the present working directory\n");
@@ -108,72 +127,17 @@ int main() {
                 printf("4. ls <flag> - shows the contents of a directory with optional flags\n");
                 printf("5. exit - exits the shell\n");
                 printf("6. help - prints this list of commands\n");
-            } else {
-                // Check if the last character is a backslash for multi-line input.
-                while (strlen(user_input) > 0 && user_input[strlen(user_input) - 1] == '\\') {
-                    // Remove the backslash and continue reading the next line.
-                    user_input[strlen(user_input) - 1] = '\0';
-                    char *next_line = readline("     > ");
-                    if (next_line) {
-                        // Concatenate the next line.
-                        user_input = realloc(user_input, strlen(user_input) + strlen(next_line) + 1);
-                        strcat(user_input, next_line);
-                        free(next_line);
-                    } else {
-                        break;  // Handle Ctrl+D (EOF) in continuation lines.
-                    }
-                }
+            }
+            else
+            {
+                modification_for_multi_line(user_input);
                 execute_command(user_input);
             }
         }
 
         free(user_input);
     }
-    
+
     return 0;
 }
 
-
-
-
-// int main()
-// {
-//     // char user_input[100];
-//     while (1)
-//     {
-//         char *user_input = readline("Myshell> ");
-//         // printf("Myshell> ");
-//         // fgets(user_input, 100, stdin);
-//         // user_input[strcspn(user_input, "\n")] = '\0';
-//         if (!user_input)
-//         {
-//             return 0;
-//         }
-//         if (strlen(user_input) > 0)
-//         {
-//             add_history(user_input);
-
-//             if (strcmp(user_input, "exit") == 0)
-//             {
-//                 free(user_input);
-//                 return 0;
-//             }
-//             else if (strcmp(user_input, "help") == 0)
-//             {
-//                 printf("Available commands:\n");
-//                 printf("1. pwd - shows the present working directory\n");
-//                 printf("2. cd <directory_name> - changes the present working directory\n");
-//                 printf("3. mkdir <directory_name> - creates a new directory\n");
-//                 printf("4. ls <flag> - shows the contents of a directory with optional flags\n");
-//                 printf("5. exit - exits the shell\n");
-//                 printf("6. help - prints this list of commands\n");
-//             }
-//             else
-//             {
-//                 execute_command(user_input);
-//             }
-//         }
-//         free(user_input);
-//     }
-//     return 0;
-// }

@@ -7,19 +7,6 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-int remove_last_amp(char *user_input)
-{
-    int bg_process_flag = 0;
-    if (user_input[strlen(user_input) - 1] == '&')
-    {
-        bg_process_flag = 1;
-        user_input[strlen(user_input) - 1] = '\0';
-        if (strcmp(user_input, "") == 0)
-            user_input[strlen(user_input) - 1] = '\0';
-    }
-    return bg_process_flag;
-}
-
 int execute_piped_command(char *command)
 {
     char *input[1000];
@@ -34,7 +21,7 @@ int execute_piped_command(char *command)
 
     // check for the last command
     char *last_command = input[count - 1];
-
+    // for this last command check if it has a &
     int bg_process_flag = 0;
 
     // Create an array to store file descriptors for pipes
@@ -61,11 +48,21 @@ int execute_piped_command(char *command)
         }
         parameter[no_param] = NULL;
         // ...............................................................
-
+        // check for the last command
         int bg_process_flag = 0;
         if (i == count - 1)
-            bg_process_flag = remove_last_amp(parameter[no_param - 1]);
-
+        {
+            if (parameter[no_param - 1][strlen(parameter[no_param - 1]) - 1] == '&')
+            {
+                bg_process_flag = 1;
+                parameter[no_param - 1][strlen(parameter[no_param - 1]) - 1] = '\0';
+                if (strcmp(parameter[no_param - 1], "") == 0)
+                {
+                    no_param -= 1;
+                    parameter[no_param] = NULL;
+                }
+            }
+        }
         if (i < count - 1)
         {
             // If not the last command, create all pipes
@@ -97,6 +94,14 @@ int execute_piped_command(char *command)
                 dup2(pipe_fds[i][1], STDOUT_FILENO);
                 close(pipe_fds[i][1]);
             }
+
+            // Close all other pipe file descriptors
+            // for (int j = 0; j < count - 1; j++)
+            // {
+            //     close(pipe_fds[j][0]);
+            //     close(pipe_fds[j][1]);
+            // }
+
             // Execute the command
             if (strcmp(parameter[0], "cd") == 0)
             {
@@ -161,8 +166,16 @@ int execute_command(char *command)
         input[count] = NULL;
         int bg_process_flag = 0;
 
-        if (count > 1)
-            bg_process_flag = remove_last_amp(input[count - 1]);
+        if (input[count - 1][strlen(input[count - 1]) - 1] == '&')
+        {
+            bg_process_flag = 1;
+            input[count - 1][strlen(input[count - 1]) - 1] = '\0';
+            if (strcmp(input[count - 1], "") == 0)
+            {
+                count -= 1;
+                input[count] = NULL;
+            }
+        }
 
         pid_t child_pid;
         child_pid = fork(); // Create a child process

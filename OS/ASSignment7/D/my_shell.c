@@ -178,8 +178,8 @@ int execute_command(char *command)
                 }
                 if (child_pid == 0)
                 {
-                    // Execute the Vi editor with the specified filename
-                    execlp("./vi_editor", "vi_editor", input[1], NULL);
+                    
+                    execvp("./vi_editor", input);
                     perror("execlp failed");
                     exit(1);
                 }

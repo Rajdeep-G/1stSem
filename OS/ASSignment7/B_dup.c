@@ -199,22 +199,6 @@ int execute_command(char *command)
     return 0;
 }
 
-void modification_for_multi_line(char *user_input)
-{
-    while (strlen(user_input) > 0 && user_input[strlen(user_input) - 1] == '\\')
-    {
-        user_input[strlen(user_input) - 1] = '\0';
-        char *next_line = readline("> ");
-        if (next_line != NULL)
-        {
-            user_input = realloc(user_input, strlen(user_input) + strlen(next_line) + 1);
-            strcat(user_input, next_line);
-            free(next_line);
-        }
-        else
-            break;
-    }
-}
 
 int main()
 {
@@ -251,7 +235,7 @@ int main()
             }
             else
             {
-                modification_for_multi_line(user_input);
+                // modification_for_multi_line(user_input);
                 execute_command(user_input);
             }
         }

@@ -180,6 +180,7 @@ int execute_command(char *command)
                 {
                     
                     execvp("./vi_editor", input);
+                    // execvp("", input);
                     perror("execlp failed");
                     exit(1);
                 }

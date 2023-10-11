@@ -73,9 +73,9 @@ void run_text_editor(const char *filename)
             if (cursor_y < max_y - 1)
                 cursor_y++;
             break;
-        // case KEY_DC: // Delete key
-        // case KEY_BACKSPACE:
-            case ' ': // Space bar key
+            // case KEY_DC: // Delete key
+            // case KEY_BACKSPACE:
+        case ' ': // Space bar key
             if (cursor_x > 0 && cursor_x <= strlen(lines[cursor_y]))
             {
                 cursor_x--; // Move the cursor left
@@ -85,6 +85,7 @@ void run_text_editor(const char *filename)
                 }
                 modified_characters++;
             }
+            
             break;
         case 19: // Ctrl+S
             printf("Saving file...\n");
@@ -93,31 +94,38 @@ void run_text_editor(const char *filename)
             {
                 fputs(lines[i], file);
             }
+
+            modified_lines = num_lines;
+            modified_words = modified_characters;
+
+            for (int i = 0; i < num_lines; i++)
+            {
+                char *token = strtok(lines[i], " \t\n");
+                while (token != NULL)
+                {
+                    modified_words++;
+                    modified_characters += strlen(token);
+                    token = strtok(NULL, " \t\n");
+                }
+            }
             mvprintw(max_y - 1, 0, "File saved");
             refresh();
             break;
         case 27: // Escape key
         case 24: // Ctrl+X
-            // Save the file and exit
-            fseek(file, 0, SEEK_SET);
-            for (int i = 0; i < num_lines; i++)
-            {
-                fputs(lines[i], file);
-            }
-            fclose(file);
+
             endwin();
-            // / Display the statistics
             printf("Number of lines modified: %d\n", modified_lines);
             printf("Number of words modified: %d\n", modified_words);
             printf("Number of characters modified: %d\n", modified_characters);
             return;
         default:
-            // if (cursor_x < strlen(lines[cursor_y]))
-            // {
-            //     memmove(&lines[cursor_y][cursor_x + 1], &lines[cursor_y][cursor_x], strlen(lines[cursor_y]) - cursor_x);
-            // }
-            // lines[cursor_y][cursor_x] = ch;
-            // cursor_x++;
+            if (cursor_x < strlen(lines[cursor_y]))
+            {
+                memmove(&lines[cursor_y][cursor_x + 1], &lines[cursor_y][cursor_x], strlen(lines[cursor_y]) - cursor_x);
+            }
+            lines[cursor_y][cursor_x] = ch;
+            cursor_x++;
             // print invalid character
             mvprintw(max_y - 1, 0, "Invalid character: %d", ch);
             break;

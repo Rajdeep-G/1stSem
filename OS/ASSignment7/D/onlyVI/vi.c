@@ -5,16 +5,14 @@
 
 void run_text_editor(const char *filename)
 {
-    // Initialize ncurses
     int modified_lines = 0;
     int modified_words = 0;
     int modified_characters = 0;
-    initscr();
-    raw();
-    keypad(stdscr, TRUE);
-    noecho();
+    initscr();            // Initialize the window
+    raw();                // Disable line buffering
+    keypad(stdscr, TRUE); // Enable arrow keys
+    noecho();             // Don't echo user input
 
-    // Open the file for editing
     FILE *file = fopen(filename, "r+");
     if (file == NULL)
     {
@@ -37,7 +35,7 @@ void run_text_editor(const char *filename)
     // Initialize cursor position
     int cursor_x = 0, cursor_y = 0;
     int max_y, max_x;
-    getmaxyx(stdscr, max_y, max_x);
+    getmaxyx(stdscr, max_y, max_x); // Get the screen dimensions
 
     int ch;
     while (1)
@@ -52,8 +50,6 @@ void run_text_editor(const char *filename)
         move(cursor_y, cursor_x);
 
         refresh();
-
-        // Handle user input
         ch = getch();
         switch (ch)
         {
@@ -85,7 +81,7 @@ void run_text_editor(const char *filename)
                 }
                 modified_characters++;
             }
-            
+
             break;
         case 19: // Ctrl+S
             printf("Saving file...\n");
@@ -95,19 +91,6 @@ void run_text_editor(const char *filename)
                 fputs(lines[i], file);
             }
 
-            modified_lines = num_lines;
-            modified_words = modified_characters;
-
-            for (int i = 0; i < num_lines; i++)
-            {
-                char *token = strtok(lines[i], " \t\n");
-                while (token != NULL)
-                {
-                    modified_words++;
-                    modified_characters += strlen(token);
-                    token = strtok(NULL, " \t\n");
-                }
-            }
             mvprintw(max_y - 1, 0, "File saved");
             refresh();
             break;

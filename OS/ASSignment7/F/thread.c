@@ -19,6 +19,17 @@ struct ThreadArgs
     char *command;
 };
 
+void add_to_struct(struct ThreadArgs *targs, char *file1, char *file2, int no_thread, char *command)
+{
+    targs->file1 = file1;
+    targs->file2 = file2;
+    targs->no_thread = no_thread;
+    targs->command = command;
+    int result[MAX_VECTOR_SIZE];
+    targs->result = result;
+    // printf("addvec %s %s %d\n", file1, file2, no_thread);
+}
+
 void *vector_operation(void *args)
 {
     struct ThreadArgs *targs = (struct ThreadArgs *)args;
@@ -29,7 +40,6 @@ void *vector_operation(void *args)
     char *command = targs->command;
     int vector1[MAX_VECTOR_SIZE];
     int vector2[MAX_VECTOR_SIZE];
-
     FILE *fp1 = fopen(file1, "r");
     FILE *fp2 = fopen(file2, "r");
 
@@ -46,16 +56,15 @@ void *vector_operation(void *args)
     // printf("Vector size: %d\n", n);
     fclose(fp1);
     fclose(fp2);
-
-    // Perform vector addition
-    // int result[MAX_VECTOR_SIZE];
     int chunk_size = n / no_thread;
     int remainder = n % no_thread;
-
     int start = 0;
     for (int i = 0; i < no_thread; i++)
     {
-        int end = start + chunk_size + (i < remainder ? 1 : 0);
+        int temp = 0;
+        if (i < remainder)
+            temp = 1;
+        int end = start + chunk_size + temp;
         for (int j = start; j < end; j++)
         {
             if (strcmp(command, "subvec") == 0)
@@ -260,21 +269,12 @@ int execute_command(char *command)
                 }
                 else
                 {
-                    char *file1 = input[1];
-                    char *file2 = input[2];
-                    char *command = input[0];
                     int no_thread = 3;
                     if (count > 3 && input[3][0] == '-')
                         no_thread = atoi(input[3] + 1);
                     // printf("addvec %s %s %d\n", file1, file2, no_thread);
                     struct ThreadArgs targs;
-                    targs.file1 = file1;
-                    targs.file2 = file2;
-                    targs.no_thread = no_thread;
-                    targs.command = command;
-
-                    int result[MAX_VECTOR_SIZE];
-                    targs.result = result;
+                    add_to_struct(&targs, input[1], input[2], no_thread, input[0]);
                     pthread_t threads[MAX_VECTOR_SIZE];
                     int i;
 
@@ -286,29 +286,28 @@ int execute_command(char *command)
                             exit(1);
                         }
                     }
-
                     for (i = 0; i < no_thread; i++)
                         pthread_join(threads[i], NULL);
-                    FILE *fp1 = fopen(file1, "r");
-                    FILE *fp2 = fopen(file2, "r");
+
+                    FILE *fp1 = fopen(input[1], "r");
+                    FILE *fp2 = fopen(input[2], "r");
                     int no_of_numbers = 0;
                     int temp;
                     while (fscanf(fp1, "%d", &temp) == 1 && fscanf(fp2, "%d", &temp) == 1)
                         no_of_numbers++;
 
-                    printf("addvec completed\n");
-                    printf("Vector addition result: ");
+                    printf("Result: ");
                     if (strcmp(command, "dotprod") == 0)
                     {
-                        int dot_prod=0;
+                        int dot_prod = 0;
                         for (int j = 0; j < no_of_numbers; j++)
-                            dot_prod+=result[j];
+                            dot_prod += targs.result[j];
                         printf("%d ", dot_prod);
                     }
                     else
                     {
                         for (int j = 0; j < no_of_numbers; j++)
-                            printf("%d ", result[j]);
+                            printf("%d ", targs.result[j]);
                     }
                     printf("\n");
                 }

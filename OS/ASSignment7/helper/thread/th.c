@@ -50,6 +50,7 @@ void *vector_addition(void *args)
     int chunk_size = n / no_thread;
     int remainder = n % no_thread;
 
+
     int start = 0;
     for (int i = 0; i < no_thread; i++)
     {
@@ -251,13 +252,12 @@ int execute_command(char *command)
                     char *file2 = input[2];
                     int no_thread = 3;
                     if (count > 3 && input[3][0] == '-')
-                        no_thread = atoi(input[3] + 1);
+                        no_thread = atoi(input[3] + 1); 
                     // printf("addvec %s %s %d\n", file1, file2, no_thread);
                     struct ThreadArgs targs;
                     targs.file1 = file1;
                     targs.file2 = file2;
                     targs.no_thread = no_thread;
-
                     int result[MAX_VECTOR_SIZE];
                     targs.result = result;
                     pthread_t threads[MAX_VECTOR_SIZE];

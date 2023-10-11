@@ -1,4 +1,4 @@
 #!/bin/bash
-
-gcc -o D_vi D_vi.c -lncurses -lreadline
-./D_vi
+gcc -o vi vi.c -lncurses -lreadline
+gcc -o D D_createVI.c -lncurses -lreadline
+./D

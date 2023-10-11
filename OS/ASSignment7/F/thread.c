@@ -16,15 +16,17 @@ struct ThreadArgs
     char *file2;
     int no_thread;
     int *result;
+    char *command;
 };
 
-void *vector_addition(void *args)
+void *vector_operation(void *args)
 {
     struct ThreadArgs *targs = (struct ThreadArgs *)args;
     char *file1 = targs->file1;
     char *file2 = targs->file2;
     int no_thread = targs->no_thread;
     int *result = targs->result;
+    char *command = targs->command;
     int vector1[MAX_VECTOR_SIZE];
     int vector2[MAX_VECTOR_SIZE];
 
@@ -56,7 +58,12 @@ void *vector_addition(void *args)
         int end = start + chunk_size + (i < remainder ? 1 : 0);
         for (int j = start; j < end; j++)
         {
-            result[j] = vector1[j] + vector2[j];
+            if (strcmp(command, "subvec") == 0)
+                result[j] = vector1[j] - vector2[j];
+            else if (strcmp(command, "dotprod") == 0)
+                result[j] = vector1[j] * vector2[j];
+            else if (strcmp(command, "addvec") == 0)
+                result[j] = vector1[j] + vector2[j];
         }
         start = end;
     }
@@ -244,7 +251,7 @@ int execute_command(char *command)
                     exit(1);
                 }
             }
-            else if (strcmp(input[0], "addvec") == 0)
+            else if (strcmp(input[0], "addvec") == 0 || strcmp(input[0], "subvec") == 0 || strcmp(input[0], "dotprod") == 0)
             {
                 if (count < 4)
                 {
@@ -255,6 +262,7 @@ int execute_command(char *command)
                 {
                     char *file1 = input[1];
                     char *file2 = input[2];
+                    char *command = input[0];
                     int no_thread = 3;
                     if (count > 3 && input[3][0] == '-')
                         no_thread = atoi(input[3] + 1);
@@ -263,6 +271,7 @@ int execute_command(char *command)
                     targs.file1 = file1;
                     targs.file2 = file2;
                     targs.no_thread = no_thread;
+                    targs.command = command;
 
                     int result[MAX_VECTOR_SIZE];
                     targs.result = result;
@@ -271,7 +280,7 @@ int execute_command(char *command)
 
                     for (i = 0; i < no_thread; i++)
                     {
-                        if (pthread_create(&threads[i], NULL, vector_addition, &targs) != 0)
+                        if (pthread_create(&threads[i], NULL, vector_operation, &targs) != 0)
                         {
                             perror("Error creating thread");
                             exit(1);
@@ -289,8 +298,18 @@ int execute_command(char *command)
 
                     printf("addvec completed\n");
                     printf("Vector addition result: ");
-                    for (int j = 0; j < no_of_numbers; j++)
-                        printf("%d ", result[j]);
+                    if (strcmp(command, "dotprod") == 0)
+                    {
+                        int dot_prod=0;
+                        for (int j = 0; j < no_of_numbers; j++)
+                            dot_prod+=result[j];
+                        printf("%d ", dot_prod);
+                    }
+                    else
+                    {
+                        for (int j = 0; j < no_of_numbers; j++)
+                            printf("%d ", result[j]);
+                    }
                     printf("\n");
                 }
             }
@@ -333,7 +352,6 @@ void modification_for_multi_line(char *user_input)
 int main()
 {
     char *user_input = NULL;
-
     while (1)
     {
         user_input = readline("Myshell> ");

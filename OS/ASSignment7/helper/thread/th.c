@@ -20,6 +20,7 @@ struct ThreadArgs
     int *result;
     int *s_index;
     int *e_index;
+    char *command;
 };
 
 void *vector_addition(void *k)
@@ -29,8 +30,14 @@ void *vector_addition(void *k)
     int start = targs.s_index[myval];
     int end = targs.e_index[myval];
     for (int i = start; i < end; i++)
-        targs.result[i] = targs.vector1[i] + targs.vector2[i];
-
+    {
+        if (strcmp(targs.command, "addvec") == 0)
+            targs.result[i] = targs.vector1[i] + targs.vector2[i];
+        else if (strcmp(targs.command, "subvec") == 0)
+            targs.result[i] = targs.vector1[i] - targs.vector2[i];
+        else if (strcmp(targs.command, "dotprod") == 0)
+            targs.result[i] = targs.vector1[i] * targs.vector2[i];
+    }
     pthread_exit(NULL);
 }
 
@@ -208,7 +215,7 @@ int execute_command(char *command)
                     exit(1);
                 }
             }
-            else if (strcmp(input[0], "addvec") == 0)
+            else if (strcmp(input[0], "addvec") == 0 || strcmp(input[0], "subvec") == 0 || strcmp(input[0], "dotprod") == 0)
             {
                 if (count < 4)
                 {
@@ -230,11 +237,10 @@ int execute_command(char *command)
                     if (count > 3 && input[3][0] == '-')
                         no_thread = atoi(input[3] + 1);
                     targs.no_thread = no_thread;
+                    targs.command = command;
                     targs.vector1 = (int *)malloc(MAX_VECTOR_SIZE * sizeof(int));
                     targs.vector2 = (int *)malloc(MAX_VECTOR_SIZE * sizeof(int));
                     printf("No of threads: %d\n", no_thread);
-                    // int result[MAX_VECTOR_SIZE];
-                    // targs.result = result;
                     targs.result = (int *)malloc(MAX_VECTOR_SIZE * sizeof(int));
                     targs.s_index = (int *)malloc(no_thread * sizeof(int));
                     targs.e_index = (int *)malloc(no_thread * sizeof(int));
@@ -256,8 +262,7 @@ int execute_command(char *command)
 
                     for (int k = 0; k < no_thread; k++)
                         printf("%d %d\n", targs.s_index[k], targs.e_index[k]);
-                    // int *myval = (int *)malloc(no_thread * sizeof(int));
-                    int myval[no_thread];
+                    int *myval = (int *)malloc(no_thread * sizeof(int));
                     for (i = 0; i < no_thread; i++)
                     {
                         myval[i] = i;
@@ -272,8 +277,18 @@ int execute_command(char *command)
                         pthread_join(threads[i], NULL);
 
                     printf("Vector addition result: ");
-                    for (int j = 0; j < no_of_numbers; j++)
-                        printf("%d ", targs.result[j]);
+                    if (strcmp(input[0], "dotprod") == 0)
+                    {
+                        int sum = 0;
+                        for (int j = 0; j < no_of_numbers; j++)
+                            sum += targs.result[j];
+                        printf("%d\n", sum);
+                    }
+                    else
+                    {
+                        for (int j = 0; j < no_of_numbers; j++)
+                            printf("%d ", targs.result[j]);
+                    }
                 }
             }
             else if (execvp(input[0], input) == -1)

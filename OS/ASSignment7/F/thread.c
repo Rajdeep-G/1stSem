@@ -238,7 +238,15 @@ int execute_command(char *command)
             bg_process_flag = remove_last_amp(input[count - 1]);
 
         // check if its a vi command
-
+        if (strcmp(input[0], "cd") == 0)
+        {
+            if (chdir(input[1]) == -1)
+            {
+                perror("chdir failed");
+                exit(1);
+            }
+            return 0;
+        }
         pid_t child_pid;
         child_pid = fork(); // Create a child process
         if (child_pid == -1)
@@ -251,14 +259,6 @@ int execute_command(char *command)
             if (strcmp(input[0], "vi") == 0)
             {
                 execlp("./vi", "vi", input[1], NULL);
-            }
-            else if (strcmp(input[0], "cd") == 0)
-            {
-                if (chdir(input[1]) == -1)
-                {
-                    perror("chdir failed");
-                    exit(1);
-                }
             }
             else if (strcmp(input[0], "addvec") == 0 || strcmp(input[0], "subvec") == 0 || strcmp(input[0], "dotprod") == 0)
             {

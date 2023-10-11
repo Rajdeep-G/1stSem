@@ -9,58 +9,27 @@
 #include <readline/history.h>
 #define MAX_VECTOR_SIZE 1000
 
+struct ThreadArgs targs;
 struct ThreadArgs
 {
-    char *file1;
-    char *file2;
+    // char *file1;
+    // char *file2;
+    int *vector1;
+    int *vector2;
     int no_thread;
     int *result;
-    
+    int *s_index;
+    int *e_index;
 };
 
-void *vector_addition(void *args)
+void *vector_addition(void *k)
 {
-    struct ThreadArgs *targs = (struct ThreadArgs *)args;
-    char *file1 = targs->file1;
-    char *file2 = targs->file2;
-    int no_thread = targs->no_thread;
-    int *result = targs->result;
-    int vector1[MAX_VECTOR_SIZE];
-    int vector2[MAX_VECTOR_SIZE];
-
-    FILE *fp1 = fopen(file1, "r");
-    FILE *fp2 = fopen(file2, "r");
-
-    if (fp1 == NULL || fp2 == NULL)
-    {
-        perror("Error opening files");
-        pthread_exit(NULL);
-    }
-
-    int n = 0;
-    while (fscanf(fp1, "%d", &vector1[n]) == 1 && fscanf(fp2, "%d", &vector2[n]) == 1)
-        n++;
-
-    // printf("Vector size: %d\n", n);
-    fclose(fp1);
-    fclose(fp2);
-
-    // Perform vector addition
-    // int result[MAX_VECTOR_SIZE];
-    int chunk_size = n / no_thread;
-    int remainder = n % no_thread;
-
-
-    int start = 0;
-    for (int i = 0; i < no_thread; i++)
-    {
-        int end = start + chunk_size + (i < remainder ? 1 : 0);
-        for (int j = start; j < end; j++)
-        {
-            result[j] = vector1[j] + vector2[j];
-        }
-        start = end;
-    }
+    // struct ThreadArgs *targs = (struct ThreadArgs *)args;
+    int myval = *(int *)k;
+    int start = targs.s_index[myval];
+    int end = targs.e_index[myval];
+    for (int i = start; i < end; i++)
+        targs.result[i] = targs.vector1[i] + targs.vector2[i];
 
     pthread_exit(NULL);
 }
@@ -250,22 +219,49 @@ int execute_command(char *command)
                 {
                     char *file1 = input[1];
                     char *file2 = input[2];
+                    FILE *fp1 = fopen(file1, "r");
+                    FILE *fp2 = fopen(file2, "r");
+                    if (fp1 == NULL || fp2 == NULL)
+                    {
+                        perror("Error opening files");
+                        exit(1);
+                    }
                     int no_thread = 3;
                     if (count > 3 && input[3][0] == '-')
-                        no_thread = atoi(input[3] + 1); 
-                    // printf("addvec %s %s %d\n", file1, file2, no_thread);
-                    struct ThreadArgs targs;
-                    targs.file1 = file1;
-                    targs.file2 = file2;
+                        no_thread = atoi(input[3] + 1);
                     targs.no_thread = no_thread;
-                    int result[MAX_VECTOR_SIZE];
-                    targs.result = result;
+                    targs.vector1 = (int *)malloc(MAX_VECTOR_SIZE * sizeof(int));
+                    targs.vector2 = (int *)malloc(MAX_VECTOR_SIZE * sizeof(int));
+                    printf("No of threads: %d\n", no_thread);
+                    // int result[MAX_VECTOR_SIZE];
+                    // targs.result = result;
+                    targs.result = (int *)malloc(MAX_VECTOR_SIZE * sizeof(int));
+                    targs.s_index = (int *)malloc(no_thread * sizeof(int));
+                    targs.e_index = (int *)malloc(no_thread * sizeof(int));
                     pthread_t threads[MAX_VECTOR_SIZE];
+                    int no_of_numbers = 0;
+                    while (fscanf(fp1, "%d", &targs.vector1[no_of_numbers]) == 1 && fscanf(fp2, "%d", &targs.vector2[no_of_numbers]) == 1)
+                        no_of_numbers++;
                     int i;
+                    int chunk_size = no_of_numbers / no_thread;
+                    int remainder = no_of_numbers % no_thread;
+                    printf("Chunk size: %d\n", chunk_size);
+                    targs.s_index[0] = 0;
+                    targs.e_index[0] = chunk_size + (remainder > 0 ? 1 : 0);
+                    for (int k = 1; k < no_thread; k++)
+                    {
+                        targs.s_index[k] = targs.e_index[k - 1];
+                        targs.e_index[k] = targs.s_index[k] + chunk_size + (remainder > k ? 1 : 0);
+                    }
 
+                    for (int k = 0; k < no_thread; k++)
+                        printf("%d %d\n", targs.s_index[k], targs.e_index[k]);
+                    // int *myval = (int *)malloc(no_thread * sizeof(int));
+                    int myval[no_thread];
                     for (i = 0; i < no_thread; i++)
                     {
-                        if (pthread_create(&threads[i], NULL, vector_addition, &targs) != 0)
+                        myval[i] = i;
+                        if (pthread_create(&threads[i], NULL, vector_addition, (void *)&myval[i]) != 0)
                         {
                             perror("Error creating thread");
                             exit(1);
@@ -274,18 +270,10 @@ int execute_command(char *command)
 
                     for (i = 0; i < no_thread; i++)
                         pthread_join(threads[i], NULL);
-                    FILE *fp1 = fopen(file1, "r");
-                    FILE *fp2 = fopen(file2, "r");
-                    int no_of_numbers = 0;
-                    int temp;
-                    while (fscanf(fp1, "%d", &temp) == 1 && fscanf(fp2, "%d", &temp) == 1)
-                        no_of_numbers++;
 
-                    printf("addvec completed\n");
                     printf("Vector addition result: ");
                     for (int j = 0; j < no_of_numbers; j++)
-                        printf("%d ", result[j]);
-
+                        printf("%d ", targs.result[j]);
                 }
             }
             else if (execvp(input[0], input) == -1)
@@ -369,7 +357,6 @@ int main()
     return 0;
 }
 
-
-// function 
+// function
 // else if part
 // header part

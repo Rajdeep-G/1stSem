@@ -9,7 +9,7 @@
 #include <ncurses.h>
 #include <pthread.h>
 #define MAX_VECTOR_SIZE 1000
-
+int var = 0;
 struct ThreadArgs
 {
     char *file1;
@@ -61,6 +61,7 @@ void *vector_operation(void *args)
     int start = 0;
     for (int i = 0; i < no_thread; i++)
     {
+        var++;
         int temp = 0;
         if (i < remainder)
             temp = 1;
@@ -310,6 +311,7 @@ int execute_command(char *command)
                             printf("%d ", targs.result[j]);
                     }
                     printf("\n");
+                    printf("Number of threads used: %d\n", var);
                 }
             }
 

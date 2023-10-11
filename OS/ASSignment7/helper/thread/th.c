@@ -15,7 +15,7 @@ struct ThreadArgs
     char *file2;
     int no_thread;
     int *result;
-    // You may need additional fields for data sharing
+    
 };
 
 void *vector_addition(void *args)
@@ -25,7 +25,6 @@ void *vector_addition(void *args)
     char *file2 = targs->file2;
     int no_thread = targs->no_thread;
     int *result = targs->result;
-    // Read vectors from files
     int vector1[MAX_VECTOR_SIZE];
     int vector2[MAX_VECTOR_SIZE];
 
@@ -369,3 +368,8 @@ int main()
 
     return 0;
 }
+
+
+// function 
+// else if part
+// header part

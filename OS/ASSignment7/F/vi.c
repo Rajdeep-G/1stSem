@@ -78,9 +78,9 @@ void run_text_editor(const char *filename)
             }
             break;
 
-        // case KEY_DC: // Delete key
-        // case KEY_BACKSPACE:
-        case ' ': // Space bar key
+        case KEY_DC: // Delete key
+        case KEY_BACKSPACE:
+        // case ' ': // Space bar key
             if (cursor_x > 0 && cursor_x <= strlen(lines[cursor_y]))
             {
                 cursor_x--; // Move the cursor left

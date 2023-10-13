@@ -78,9 +78,9 @@ void run_text_editor(const char *filename)
             }
             break;
 
-        // case KEY_DC: // Delete key
-        // case KEY_BACKSPACE:
-        case ' ': // Space bar key
+        case KEY_DC: // Delete key
+        case KEY_BACKSPACE:
+            // case ' ': // Space bar key
             if (cursor_x > 0 && cursor_x <= strlen(lines[cursor_y]))
             {
                 cursor_x--; // Move the cursor left
@@ -109,19 +109,16 @@ void run_text_editor(const char *filename)
 
             // find total no of lines
             for (int i = 0; i < num_lines; i++)
-            {
                 total_lines++;
-            }
             // mvprintw(max_y - 1, 0, "File saved");
             refresh();
             break;
         case 27: // Escape key
         case 24: // Ctrl+X
-
             endwin();
             printf("Total words: %d\n", total_words);
             printf("Total lines: %d\n", total_lines);
-            printf("Number of characters modified: %d\n", modified_characters);
+            printf("Number of characters written/modified: %d\n", modified_characters);
             return;
         default:
             if (cursor_x < strlen(lines[cursor_y]))

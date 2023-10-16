@@ -20,7 +20,6 @@ typedef struct Graph
 // Function to read the edgelist and create the initial graph
 void createInitialGraph(Graph *graph)
 {
-    // read the edgelist from the file "initial_graph.edgelist.txt" and create the graph
     FILE *fp = fopen("loc-brightkite_edges.txt", "r");
     if (fp == NULL)
     {
@@ -41,8 +40,8 @@ void createInitialGraph(Graph *graph)
     }
 
     graph->num_nodes = num_nodes;
-    graph->nodes = (Node *)malloc(sizeof(Node) * num_nodes);
-    // Initialize the nodes
+    graph->nodes = (Node *)malloc(sizeof(Node) * num_nodes); // Allocate memory for the nodes
+
     for (int i = 0; i < graph->num_nodes; i++)
     {
         graph->nodes[i].value = i;
@@ -51,7 +50,7 @@ void createInitialGraph(Graph *graph)
         graph->nodes[i].partition = -1;
     }
 
-    rewind(fp);
+    rewind(fp); // Go back to the beginning of the file
 
     // Add edges
     while (!feof(fp))
@@ -59,6 +58,7 @@ void createInitialGraph(Graph *graph)
         int node1, node2;
         if (fscanf(fp, "%d %d", &node1, &node2) != 2)
             break;
+
         // Add node2 to node1's neighbors
         Node *new_node = (Node *)malloc(sizeof(Node));
         new_node->value = node2;
@@ -90,10 +90,12 @@ void printGraph(Graph *graph)
 
 int is_in_array(int *array, int size, int value)
 {
-    for (int i = 0; i < size; i++)
+    int k = 0;
+    while (k < size)
     {
-        if (array[i] == value)
+        if (array[k] == value)
             return 1;
+        k++;
     }
     return 0;
 }
@@ -110,38 +112,58 @@ int count_neighbors(Node *node)
     return count;
 }
 
+void write_landmark_log(int *landmark_indices, Graph *graph, int num_partitions, int num_landmarks)
+{
+    FILE *landmark_log = fopen("landmark.log", "w");
+    if (landmark_log == NULL)
+    {
+        perror("Error opening landmark.log file");
+        exit(1);
+    }
+    for (int i = 0; i < num_partitions; i++)
+    {
+        fprintf(landmark_log, "%d ", landmark_indices[i]);
+        for (int j = 0; j < graph->num_nodes; j++)
+        {
+            if (graph->nodes[j].partition == i % num_partitions)
+                fprintf(landmark_log, "%d ", j);
+        }
+        fprintf(landmark_log, "\n");
+    }
+
+    fclose(landmark_log);
+}
+
 void chooseLandmarkNodes(Graph *graph)
 {
     int num_landmarks = 50;
+    int num_total_landmarks = 100;
     int num_partitions = 100;
-
-    // Initialize an array to keep track of selected landmark indices
+    srand(time(NULL));
     int landmark_indices[num_landmarks];
     // Randomly select 50 landmark nodes
     for (int i = 0; i < num_landmarks; i++)
     {
-        int landmark_index;
-        do
+        int landmark_index = rand() % graph->num_nodes;
+        if (graph->nodes[landmark_index].is_landmark == 1)
+            i--;
+        else
         {
-            // Randomly select a node index (make sure it's not already selected)
-            landmark_index = rand() % graph->num_nodes;
-        } while (is_in_array(landmark_indices, i, landmark_index));
-        landmark_indices[i] = landmark_index;
-
-        // Mark this node as a landmark
-        graph->nodes[landmark_index].is_landmark = 1;
+            landmark_indices[i] = landmark_index;
+            graph->nodes[landmark_index].is_landmark = 1;
+        }
     }
 
-    // Randomly select 50 highest degree landmark nodes
+    // for (int x = 0; x < num_landmarks; x++)
+    //     printf("%d ", landmark_indices[x]);
+
     int num_highest_degree_landmarks = 50;
     int highest_degree_landmark_indices[num_highest_degree_landmarks];
 
-    // Calculate the degrees of all nodes and store them in an array
+
     int node_degrees[graph->num_nodes];
     for (int i = 0; i < graph->num_nodes; i++)
-    {
-        node_degrees[i] = count_neighbors(&graph->nodes[i]);
-    }
+        node_degrees[i] = count_neighbors(&graph->nodes[i]); // Count the number of neighbors for each node
 
     //  Select 50 highest degree nodes
     for (int i = 0; i < num_highest_degree_landmarks; i++)
@@ -162,6 +184,10 @@ void chooseLandmarkNodes(Graph *graph)
         highest_degree_landmark_indices[i] = max_degree_index;
         graph->nodes[max_degree_index].is_landmark = 1;
     }
+
+    // for (int x=0;x<num_highest_degree_landmarks;x++)
+    //     printf("%d ", highest_degree_landmark_indices[x]);
+
     // Assign each partition to one random landmark node
     for (int i = 0; i < graph->num_nodes; i++)
     {
@@ -171,38 +197,14 @@ void chooseLandmarkNodes(Graph *graph)
             graph->nodes[i].partition = landmark_index % num_partitions;
         }
     }
-    // Write assignments to the "landmark.log" file
-    FILE *landmark_log = fopen("landmark.log", "w");
-    if (landmark_log == NULL)
-    {
-        perror("Error opening landmark.log file");
-        exit(1);
-    }
-    // printf("%d", num_landmarks);
-    for (int i = 0; i < 100; i++)
-    {
-        fprintf(landmark_log, "%d ", landmark_indices[i]);
-        for (int j = 0; j < graph->num_nodes; j++)
-        {
-            if (graph->nodes[j].partition == i % num_partitions)
-            {
-                fprintf(landmark_log, "%d ", j);
-            }
-        }
-        fprintf(landmark_log, "\n");
-    }
 
-    fclose(landmark_log);
+    write_landmark_log(landmark_indices, graph, num_partitions, num_total_landmarks);
 }
 
 void createRandomPairs(Graph *graph)
 {
     int num_pairs = 10000;
-
-    // Initialize random number generator
     srand(time(NULL));
-
-    // Open the "path_to_find.log" file for writing
     FILE *path_log = fopen("path_to_find.log", "w");
     if (path_log == NULL)
     {
@@ -210,36 +212,28 @@ void createRandomPairs(Graph *graph)
         exit(1);
     }
     for (int i = 0; i < num_pairs; i++)
-    {
-        // Generate two random node indices within the range of the number of nodes
-        int node1 = rand() % graph->num_nodes;
-        int node2 = rand() % graph->num_nodes;
-
-        // Write the pair of node indices to the log file
-        fprintf(path_log, "%d %d\n", node1, node2);
-    }
-
-    // Close the log file
+        fprintf(path_log, "%d %d\n", rand() % graph->num_nodes, rand() % graph->num_nodes);
     fclose(path_log);
 }
+
 // Function for graph_update threads
 void *graphUpdateThread(void *arg)
 {
-    // while (1)
-    // {
-    //     // Randomly toss a coin to add or remove edges
-    //     if (coin_toss(0.2))
-    //     {
-    //         // Add an edge
-    //         // Write to "update.log"
-    //     }
-    //     else
-    //     {
-    //         // Remove an edge
-    //         // Write to "update.log"
-    //     }
-    //     // Synchronize to avoid conflicts
-    // }
+    while (1)
+    {
+        //     // Randomly toss a coin to add or remove edges
+        //     if (coin_toss(0.2))
+        //     {
+        //         // Add an edge
+        //         // Write to "update.log"
+        //     }
+        //     else
+        //     {
+        //         // Remove an edge
+        //         // Write to "update.log"
+        //     }
+        //     // Synchronize to avoid conflicts
+    }
 }
 
 // Function for path_finder threads
@@ -271,27 +265,27 @@ int main()
     // Create the graph data structure
     Graph graph;
     createInitialGraph(&graph);
-    printGraph(&graph);
-    // clear screen
-    system("clear");
+    // printGraph(&graph);
+
+    // system("clear");
 
     // Choose landmark nodes and assign partitions
     chooseLandmarkNodes(&graph);
 
-    // createRandomPairs(&graph);
+    createRandomPairs(&graph);
 
-    // Create thread IDs
-    pthread_t graph_update_threads[5];
-    pthread_t path_finder_threads[20];
-    pthread_t path_stitcher_threads[10];
+    // // Create thread IDs
+    // pthread_t graph_update_threads[5];
+    // pthread_t path_finder_threads[20];
+    // pthread_t path_stitcher_threads[10];
 
-    // Create and initialize semaphores and locks
+    // // Create and initialize semaphores and locks
 
-    // Create and launch graph_update threads
-    for (int i = 0; i < 5; i++)
-    {
-        pthread_create(&graph_update_threads[i], NULL, graphUpdateThread, /* pass relevant data */);
-    }
+    // // Create and launch graph_update threads
+    // for (int i = 0; i < 5; i++)
+    // {
+    //     pthread_create(&graph_update_threads[i], NULL, graphUpdateThread, /* pass relevant data */);
+    // }
 
     // Start the threads
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 
 typedef struct Node
 {
@@ -16,6 +17,19 @@ typedef struct Graph
     int num_nodes;
     Node *nodes; // Array of nodes
 } Graph;
+
+// function definitions
+
+void createInitialGraph(Graph *graph);
+void printGraph(Graph *graph);
+int is_in_array(int *array, int size, int value);
+int count_neighbors(Node *node);
+void write_landmark_log(int *landmark_indices, Graph *graph, int num_partitions, int num_landmarks);
+void chooseLandmarkNodes(Graph *graph);
+void createRandomPairs(Graph *graph);
+void *graphUpdateThread(void *arg);
+void *pathFinderThread(void *arg);
+void *pathStitcherThread(void *arg);
 
 // Function to read the edgelist and create the initial graph
 void createInitialGraph(Graph *graph)
@@ -160,7 +174,6 @@ void chooseLandmarkNodes(Graph *graph)
     int num_highest_degree_landmarks = 50;
     int highest_degree_landmark_indices[num_highest_degree_landmarks];
 
-
     int node_degrees[graph->num_nodes];
     for (int i = 0; i < graph->num_nodes; i++)
         node_degrees[i] = count_neighbors(&graph->nodes[i]); // Count the number of neighbors for each node
@@ -216,24 +229,156 @@ void createRandomPairs(Graph *graph)
     fclose(path_log);
 }
 
-// Function for graph_update threads
-void *graphUpdateThread(void *arg)
+// Mutex for synchronizing access to the "update.log" file
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+// Function to generate a random number in the range [0, 1]
+double random_uniform()
 {
+    return (double)rand() / RAND_MAX;
+}
+
+int edge_exists(Node *node, int value)
+{
+    Node *curr = node->neighbors;
+    while (curr != NULL)
+    {
+        if (curr->value == value)
+            return 1;
+        curr = curr->neighbors;
+    }
+    return 0;
+}
+
+void add_edge(Graph *graph, int node_src, int node_dest)
+{
+    if (edge_exists(&graph->nodes[node_src], node_dest))
+        return;
+    Node *new_neighbour_node0 = (Node *)malloc(sizeof(Node));
+    new_neighbour_node0->value = node_dest;
+    new_neighbour_node0->neighbors = graph->nodes[node_src].neighbors;
+    graph->nodes[node_src].neighbors = new_neighbour_node0;
+
+    Node *new_neighbour_node1 = (Node *)malloc(sizeof(Node));
+    new_neighbour_node1->value = node_src;
+    new_neighbour_node1->neighbors = graph->nodes[node_dest].neighbors;
+    graph->nodes[node_dest].neighbors = new_neighbour_node1;
+
+    // printf("FINISHED ADDING");
+}
+
+void remove_edge(Graph *graph, int node_src, int node_dest)
+{
+    Node *curr = graph->nodes[node_src].neighbors;
+    Node *prev = NULL;
+    while (curr != NULL)
+    {
+        if (curr->value == node_dest)
+        {
+            if (prev == NULL)
+                graph->nodes[node_src].neighbors = curr->neighbors;
+            else
+                prev->neighbors = curr->neighbors;
+            free(curr);
+            break;
+        }
+        prev = curr;
+        curr = curr->neighbors;
+    }
+
+    curr = graph->nodes[node_dest].neighbors;
+    prev = NULL;
+    while (curr != NULL)
+    {
+        if (curr->value == node_src)
+        {
+            if (prev == NULL)
+                graph->nodes[node_dest].neighbors = curr->neighbors;
+            else
+                prev->neighbors = curr->neighbors;
+            free(curr);
+            break;
+        }
+        prev = curr;
+        curr = curr->neighbors;
+    }
+
+    // printf("FINISHED REMOVING");
+}
+
+void log_update(char *type, int node0, int node1)
+{
+    time_t current_time;
+    struct tm *time_info;
+    char time_string[20];
+
+    time(&current_time);
+    time_info = localtime(&current_time);
+    strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", time_info);
+
+    pthread_mutex_lock(&log_mutex);
+    FILE *update_log = fopen("update.log", "a");
+    if (update_log == NULL)
+    {
+        perror("Error opening update.log file");
+        exit(1);
+    }
+
+    fprintf(update_log, "<%s> <%d, %d> <%s>\n", type, node0, node1, time_string);
+
+    fclose(update_log);
+    pthread_mutex_unlock(&log_mutex);
+}
+
+void performGraphUpdate(Graph *graph)
+{
+    pthread_mutex_lock(&log_mutex);
+
+    if (random_uniform() < 0.2)
+    {
+
+        int node0 = 0;
+        int node1 = 0;
+        while (1)
+        {
+            node0 = rand() % graph->num_nodes;
+            node1 = rand() % graph->num_nodes;
+            printf("%d %d", node0, node1);
+            if (node0 != node1 && !edge_exists(&graph->nodes[node0], node1))
+                break;
+        }
+        add_edge(graph, node0, node1);
+        log_update("ADD", node0, node1);
+    }
+    else
+    {
+        int node2 = 0;
+        int node3 = 0;
+        while (1)
+        {
+            node2 = rand() % graph->num_nodes;
+            node3 = rand() % graph->num_nodes;
+            if (node2 != node3 && edge_exists(&graph->nodes[node2], node3))
+                break;
+        }
+
+        remove_edge(graph, node2, node3);
+        log_update("REMOVE", node2, node3);
+    }
+    pthread_mutex_unlock(&log_mutex);
+}
+// Thread function for graph_update threads
+void *graphUpdateThread(void *data)
+{
+    Graph *graph = (Graph *)data;
+    static int num=0;
     while (1)
     {
-        //     // Randomly toss a coin to add or remove edges
-        //     if (coin_toss(0.2))
-        //     {
-        //         // Add an edge
-        //         // Write to "update.log"
-        //     }
-        //     else
-        //     {
-        //         // Remove an edge
-        //         // Write to "update.log"
-        //     }
-        //     // Synchronize to avoid conflicts
+        printf("HI %d",num++);
+        // Perform graph updates
+        performGraphUpdate(graph);
     }
+    printf("HI1");
+    return NULL;
 }
 
 // Function for path_finder threads
@@ -262,31 +407,29 @@ void *pathStitcherThread(void *arg)
 
 int main()
 {
-    // Create the graph data structure
+    pthread_mutex_init(&log_mutex, NULL);
     Graph graph;
     createInitialGraph(&graph);
     // printGraph(&graph);
 
     // system("clear");
 
-    // Choose landmark nodes and assign partitions
     chooseLandmarkNodes(&graph);
-
     createRandomPairs(&graph);
 
     // // Create thread IDs
-    // pthread_t graph_update_threads[5];
-    // pthread_t path_finder_threads[20];
-    // pthread_t path_stitcher_threads[10];
+    pthread_t graph_update_threads[5];
+    pthread_t path_finder_threads[20];
+    pthread_t path_stitcher_threads[10];
 
     // // Create and initialize semaphores and locks
 
-    // // Create and launch graph_update threads
-    // for (int i = 0; i < 5; i++)
-    // {
-    //     pthread_create(&graph_update_threads[i], NULL, graphUpdateThread, /* pass relevant data */);
-    // }
-
+    // Create and launch graph_update threads
+    for (int i = 0; i < 5; i++)
+    {
+        pthread_create(&graph_update_threads[i], NULL, graphUpdateThread, &graph);
+    }
+    // performGraphUpdate(&graph);
     // Start the threads
 
     // Wait for threads to finish

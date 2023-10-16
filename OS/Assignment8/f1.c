@@ -331,7 +331,7 @@ void log_update(char *type, int node0, int node1)
 
 void performGraphUpdate(Graph *graph)
 {
-    pthread_mutex_lock(&log_mutex);
+    // pthread_mutex_lock(&log_mutex);
 
     if (random_uniform() < 0.2)
     {
@@ -364,22 +364,22 @@ void performGraphUpdate(Graph *graph)
         remove_edge(graph, node2, node3);
         log_update("REMOVE", node2, node3);
     }
-    pthread_mutex_unlock(&log_mutex);
+    // pthread_mutex_unlock(&log_mutex);
 }
 // Thread function for graph_update threads
-void *graphUpdateThread(void *data)
-{
-    Graph *graph = (Graph *)data;
-    static int num=0;
-    while (1)
-    {
-        printf("HI %d",num++);
-        // Perform graph updates
-        performGraphUpdate(graph);
-    }
-    printf("HI1");
-    return NULL;
-}
+// void *graphUpdateThread(void *data)
+// {
+//     Graph *graph = (Graph *)data;
+//     static int num=0;
+//     while (1)
+//     {
+//         printf("HI %d",num++);
+//         // Perform graph updates
+//         performGraphUpdate(graph);
+//     }
+//     printf("HI1");
+//     return NULL;
+// }
 
 // Function for path_finder threads
 void *pathFinderThread(void *arg)
@@ -418,18 +418,18 @@ int main()
     createRandomPairs(&graph);
 
     // // Create thread IDs
-    pthread_t graph_update_threads[5];
-    pthread_t path_finder_threads[20];
-    pthread_t path_stitcher_threads[10];
+    // pthread_t graph_update_threads[5];
+    // pthread_t path_finder_threads[20];
+    // pthread_t path_stitcher_threads[10];
 
     // // Create and initialize semaphores and locks
 
     // Create and launch graph_update threads
-    for (int i = 0; i < 5; i++)
-    {
-        pthread_create(&graph_update_threads[i], NULL, graphUpdateThread, &graph);
-    }
-    // performGraphUpdate(&graph);
+    // for (int i = 0; i < 5; i++)
+    // {
+    //     pthread_create(&graph_update_threads[i], NULL, graphUpdateThread, &graph);
+    // }
+    performGraphUpdate(&graph);
     // Start the threads
 
     // Wait for threads to finish

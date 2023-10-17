@@ -4,7 +4,7 @@
 #include <semaphore.h>
 #include <time.h>
 #include <string.h>
-
+#define INT_MAX 1000000
 typedef struct Node
 {
     int value; // Node identifier
@@ -28,6 +28,19 @@ typedef struct Partition
 // Partition *partitions = (Partition *)malloc(sizeof(Partition) * num_partitions);
 Partition partitions[100];
 
+// linked list for path
+typedef struct PathNode
+{
+    int node;              // Node identifier in the path
+    struct PathNode *next; // Pointer to the next node in the path
+} PathNode;
+
+typedef struct
+{
+    int distance;   // Node identifier
+    PathNode *head; // Head of the linked list representing the path
+} Path;
+Path *landmark_paths[100][100];
 // function definitions
 
 void createInitialGraph(Graph *graph);
@@ -150,7 +163,7 @@ void write_landmark_log(int *landmark_indices, Graph *graph, int num_partitions,
         perror("Error opening landmark.log file");
         exit(1);
     }
-    
+
     for (int i = 0; i < num_partitions; i++)
     {
         partitions[i].nodes = (int *)malloc(sizeof(int) * graph->num_nodes);
@@ -251,7 +264,6 @@ void chooseLandmarkNodes(Graph *graph)
     }
 
     write_landmark_log(landmark_indices, graph, num_partitions, num_total_landmarks);
-
 }
 
 void createRandomPairs(Graph *graph)
@@ -268,6 +280,8 @@ void createRandomPairs(Graph *graph)
         fprintf(path_log, "%d %d\n", rand() % graph->num_nodes, rand() % graph->num_nodes);
     fclose(path_log);
 }
+
+// ############################################################################################################
 
 // Mutex for synchronizing access to the "update.log" file
 pthread_mutex_t log_mutex;
@@ -421,36 +435,110 @@ void *graphUpdateThread(void *data)
     return NULL;
 }
 
-// Function for path_finder threads
-void *pathFinderThread(void *arg)
+// ############################################################################################################
+
+void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, Path *landmark_paths[][100])
 {
-    // Eachthreadwilljustkeeponfindingpathsbetweenlandmarksandforeachpartitionfind
-    // pathsbetweennodesinthatpartitionandthelandmarknode.UseDijkstra’salgorithm
-    // tofindtheshortestpathsbetweennodes.
-    Graph *graph = (Graph *)arg;
-    // while (1)
+    printf("HI\n");
+    int num_landmarks = 100;
+    // for (int i = 0; i < num_landmarks; i++)
     // {
-    //     int source, target_partition;
-    //     FILE *path_log = fopen("path_to_find.log", "r");
-    //     if (path_log == NULL)
+    //     for (int j = 0; j < num_landmarks; j++)
     //     {
-    //         perror("Error opening path_to_find.log file");
-    //         exit(1);
-    //     }
-    //     while (!feof(path_log))
-    //     {
-    //         fscanf(path_log, "%d %d", &source, &target_partition);
-    //         // printf("%d %d\n", source, target_partition);
-    //         // printf("HI lock\n");
-    //         pthread_mutex_lock(&log_mutex);
-    //         // printf("HI lock\n");
-    //         // printf("HI unlock\n");
-    //         pthread_mutex_unlock(&log_mutex);
-    //     }
+    int i = 0;
+    int j = 1;
+    int src = partitions[i].landmark;
+    int dest = partitions[j].landmark;
+
+    if (src == dest)
+        return;
+
+
+    int distances[graph->num_nodes];
+    int visited[graph->num_nodes];
+    for (int k = 0; k < graph->num_nodes; k++)
+    {
+        distances[k] = INT_MAX;
+        visited[k] = 0;
+    }
+    distances[src] = 0;
+
+    printf("HI ini\n");
+    for (int k = 0; k < graph->num_nodes - 1; k++)
+    {
+        int min_distance = INT_MAX;
+        int min_index = -1;
+        for (int l = 0; l < graph->num_nodes; l++)
+        {
+            if (visited[l] == 0 && distances[l] < min_distance)
+            {
+                min_distance = distances[l];
+                min_index = l;
+            }
+        }
+        visited[min_index] = 1;
+
+        Node *curr = &graph->nodes[min_index];
+        while (curr != NULL)
+        {
+            int neighbor = curr->value;
+            if (visited[neighbor] == 0 && distances[min_index] != INT_MAX && distances[min_index] + 1 < distances[neighbor])
+            {
+                distances[neighbor] = distances[min_index] + 1;
+            }
+            curr = curr->neighbors;
+        }
+    }
+    int path_length = distances[dest];
+    printf("%d\n", path_length);
+    // landmark_paths[i][j]->distance = path_length;
+    // PathNode *curr = landmark_paths[i][j]->head;
+    // while (curr != NULL)
+    // {
+    //     PathNode *temp = curr;
+    //     curr = curr->next;
+    //     free(temp);
     // }
+    // landmark_paths[i][j]->head = NULL;
+    // }
+    // }
+    printf("HI\n");
 }
 
-// Function for path_stitcher threads
+void performPathFind(Graph *graph)
+{
+    // node to landmark distance
+    djikstra_landmark(graph, partitions, 100, landmark_paths);
+    // landmark to landmark distance
+}
+
+void *pathFinderThread(void *arg)
+{
+    Graph *graph = (Graph *)arg;
+    performPathFind(graph);
+    return NULL;
+}
+
+void initialise_landmark_paths()
+{
+
+    for (int i = 0; i < 100; i++)
+    {
+        for (int j = 0; j < 100; j++)
+        {
+
+            landmark_paths[i][j] = (Path *)malloc(sizeof(Path));
+            landmark_paths[i][j]->head = NULL;
+            if (i == j)
+                landmark_paths[i][j]->distance = 0;
+            else
+                landmark_paths[i][j]->distance = INT_MAX;
+        }
+    }
+}
+
+// ############################################################################################################
+
 void *pathStitcherThread(void *arg)
 {
     while (1)
@@ -463,6 +551,8 @@ void *pathStitcherThread(void *arg)
     }
 }
 
+// ############################################################################################################
+
 int main()
 {
 
@@ -472,6 +562,7 @@ int main()
         return 1;
     }
     Graph graph;
+
     createInitialGraph(&graph);
     // printGraph(&graph);
 
@@ -494,23 +585,26 @@ int main()
                    strerror(error));
     }
 
-    for (int i = 0; i < 20; i++)
-    {
-        error = pthread_create(&(path_finder_threads[i]), NULL, pathFinderThread, &graph);
-        if (error != 0)
-            printf("\nThread can't be created :[%s]",
-                   strerror(error));
-    }
-
     for (int i = 0; i < 5; i++)
         pthread_join(graph_update_threads[i], NULL);
+    // .........................
 
-    for (int i = 0; i < 20; i++)
-        pthread_join(path_finder_threads[i], NULL);
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     error = pthread_create(&(path_finder_threads[i]), NULL, pathFinderThread, &graph);
+    //     if (error != 0)
+    //         printf("\nThread can't be created :[%s]",
+    //                strerror(error));
+    // }
 
-    pthread_mutex_destroy(&log_mutex);
+    // for (int i = 0; i < 20; i++)
+    //     pthread_join(path_finder_threads[i], NULL);
+
+    // pthread_mutex_destroy(&log_mutex);
 
     // .............................
+    initialise_landmark_paths();
+    pathFinderThread(&graph);
 
     return 0;
 }

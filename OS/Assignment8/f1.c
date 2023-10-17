@@ -5,6 +5,11 @@
 #include <time.h>
 #include <string.h>
 #define INT_MAX 1000000
+#define gl_landmark 100
+#define gl_partition 100
+#define gl_high_degree_landmark 5
+#define gl_random_landmark 5
+
 typedef struct Node
 {
     int value; // Node identifier
@@ -26,7 +31,7 @@ typedef struct Partition
     int landmark;
 } Partition;
 // Partition *partitions = (Partition *)malloc(sizeof(Partition) * num_partitions);
-Partition partitions[100];
+Partition partitions[gl_landmark];
 
 // linked list for path
 typedef struct PathNode
@@ -40,7 +45,7 @@ typedef struct
     int distance;   // Node identifier
     PathNode *head; // Head of the linked list representing the path
 } Path;
-Path *landmark_paths[100][100];
+Path *landmark_paths[gl_landmark][gl_landmark];
 // function definitions
 
 void createInitialGraph(Graph *graph);
@@ -63,6 +68,7 @@ void *pathStitcherThread(void *arg);
 void createInitialGraph(Graph *graph)
 {
     FILE *fp = fopen("loc-brightkite_edges.txt", "r");
+    // FILE *fp=fopen("input.txt","r");
     if (fp == NULL)
     {
         printf("Error opening file\n");
@@ -192,19 +198,19 @@ void write_landmark_log(int *landmark_indices, Graph *graph, int num_partitions,
 
     fclose(landmark_log);
 
-    for (int m = 0; m < 4; m++)
-    {
-        printf("%d ", partitions[m].landmark);
-        printf("%d ", partitions[m].num_nodes);
-        printf("\n");
-    }
+    // for (int m = 0; m < 4; m++)
+    // {
+    //     printf("%d ", partitions[m].landmark);
+    //     printf("%d ", partitions[m].num_nodes);
+    //     printf("\n");
+    // }
 }
 
 void chooseLandmarkNodes(Graph *graph)
 {
-    int num_landmarks = 50;
-    int num_total_landmarks = 100;
-    int num_partitions = 100;
+    int num_landmarks = gl_random_landmark;
+    int num_total_landmarks = gl_landmark;
+    int num_partitions = gl_partition;
     srand(time(NULL));
     int landmark_indices[num_landmarks];
     // Randomly select 50 landmark nodes
@@ -223,7 +229,7 @@ void chooseLandmarkNodes(Graph *graph)
     // for (int x = 0; x < num_landmarks; x++)
     //     printf("%d ", landmark_indices[x]);
 
-    int num_highest_degree_landmarks = 50;
+    int num_highest_degree_landmarks = gl_high_degree_landmark;
     int highest_degree_landmark_indices[num_highest_degree_landmarks];
 
     int node_degrees[graph->num_nodes];
@@ -258,7 +264,7 @@ void chooseLandmarkNodes(Graph *graph)
     {
         if (!graph->nodes[i].is_landmark)
         {
-            int landmark_index = landmark_indices[rand() % 100];
+            int landmark_index = landmark_indices[rand() % gl_landmark];
             graph->nodes[i].partition = landmark_index % num_partitions;
         }
     }
@@ -437,22 +443,36 @@ void *graphUpdateThread(void *data)
 
 // ############################################################################################################
 
+int minDistance_djikstra(int distances[], int visited[], int num_nodes)
+{
+    int min = INT_MAX;
+    int min_index = -1;
+    for (int i = 0; i < num_nodes; i++)
+    {
+        if (visited[i] == 0 && distances[i] <= min)
+        {
+            min = distances[i];
+            min_index = i;
+        }
+    }
+    return min_index;
+}
+
 void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, Path *landmark_paths[][100])
 {
     printf("HI\n");
-    int num_landmarks = 100;
+    int num_landmarks = gl_landmark;
     // for (int i = 0; i < num_landmarks; i++)
     // {
     //     for (int j = 0; j < num_landmarks; j++)
     //     {
     int i = 0;
-    int j = 1;
+    int j = 6;
     int src = partitions[i].landmark;
     int dest = partitions[j].landmark;
 
     if (src == dest)
         return;
-
 
     int distances[graph->num_nodes];
     int visited[graph->num_nodes];
@@ -462,33 +482,29 @@ void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, 
         visited[k] = 0;
     }
     distances[src] = 0;
-
     printf("HI ini\n");
     for (int k = 0; k < graph->num_nodes - 1; k++)
     {
-        int min_distance = INT_MAX;
-        int min_index = -1;
-        for (int l = 0; l < graph->num_nodes; l++)
-        {
-            if (visited[l] == 0 && distances[l] < min_distance)
-            {
-                min_distance = distances[l];
-                min_index = l;
-            }
-        }
+        int min_index = minDistance_djikstra(distances, visited, graph->num_nodes);
         visited[min_index] = 1;
-
         Node *curr = &graph->nodes[min_index];
         while (curr != NULL)
         {
-            int neighbor = curr->value;
-            if (visited[neighbor] == 0 && distances[min_index] != INT_MAX && distances[min_index] + 1 < distances[neighbor])
+            int v=curr->value;
+            if (!visited[v] && distances[min_index] != INT_MAX && distances[min_index] + 1 < distances[v])
             {
-                distances[neighbor] = distances[min_index] + 1;
+                distances[v] = distances[min_index] + 1;
+                PathNode *new_node = (PathNode *)malloc(sizeof(PathNode));
+                new_node->node = min_index;
+                new_node->next = landmark_paths[i][j]->head;
+                landmark_paths[i][j]->head = new_node;
             }
             curr = curr->neighbors;
+
         }
+
     }
+
     int path_length = distances[dest];
     printf("%d\n", path_length);
     // landmark_paths[i][j]->distance = path_length;
@@ -508,7 +524,7 @@ void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, 
 void performPathFind(Graph *graph)
 {
     // node to landmark distance
-    djikstra_landmark(graph, partitions, 100, landmark_paths);
+    djikstra_landmark(graph, partitions, gl_landmark, landmark_paths);
     // landmark to landmark distance
 }
 
@@ -522,9 +538,9 @@ void *pathFinderThread(void *arg)
 void initialise_landmark_paths()
 {
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < gl_landmark; i++)
     {
-        for (int j = 0; j < 100; j++)
+        for (int j = 0; j < gl_landmark; j++)
         {
 
             landmark_paths[i][j] = (Path *)malloc(sizeof(Path));
@@ -569,7 +585,7 @@ int main()
     // system("clear");
 
     chooseLandmarkNodes(&graph);
-    createRandomPairs(&graph);
+    // createRandomPairs(&graph);
 
     pthread_t graph_update_threads[5];
     pthread_t path_finder_threads[20];

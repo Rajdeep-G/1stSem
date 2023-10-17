@@ -443,6 +443,45 @@ void *graphUpdateThread(void *data)
 
 // ############################################################################################################
 
+PathNode *constructPath(int predesessor[], int src, int dest)
+{
+    PathNode *head = NULL;
+    PathNode *curr = NULL;
+    int curr_node = dest;
+    while (curr_node != src)
+    {
+        PathNode *new_node = (PathNode *)malloc(sizeof(PathNode));
+        new_node->node = curr_node;
+        new_node->next = NULL;
+        if (head == NULL)
+        {
+            head = new_node;
+            curr = new_node;
+        }
+        else
+        {
+            curr->next = new_node;
+            curr = new_node;
+        }
+        curr_node = predesessor[curr_node];
+    }
+    PathNode *new_node = (PathNode *)malloc(sizeof(PathNode));
+    new_node->node = src;
+    new_node->next = NULL;
+    if (head == NULL)
+    {
+        head = new_node;
+        curr = new_node;
+    }
+    else
+    {
+        curr->next = new_node;
+        curr = new_node;
+    }
+
+    return head;
+}
+
 int minDistance_djikstra(int distances[], int visited[], int num_nodes)
 {
     int min = INT_MAX;
@@ -467,22 +506,24 @@ void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, 
     //     for (int j = 0; j < num_landmarks; j++)
     //     {
     int i = 0;
-    int j = 6;
+    int j = 4;
     int src = partitions[i].landmark;
     int dest = partitions[j].landmark;
 
+    printf("%d %d\n", src, dest);
     if (src == dest)
         return;
 
     int distances[graph->num_nodes];
     int visited[graph->num_nodes];
+    int predesessor[graph->num_nodes];
     for (int k = 0; k < graph->num_nodes; k++)
     {
         distances[k] = INT_MAX;
         visited[k] = 0;
+        predesessor[k] = -1;
     }
     distances[src] = 0;
-    printf("HI ini\n");
     for (int k = 0; k < graph->num_nodes - 1; k++)
     {
         int min_index = minDistance_djikstra(distances, visited, graph->num_nodes);
@@ -490,41 +531,43 @@ void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, 
         Node *curr = &graph->nodes[min_index];
         while (curr != NULL)
         {
-            int v=curr->value;
+            int v = curr->value;
             if (!visited[v] && distances[min_index] != INT_MAX && distances[min_index] + 1 < distances[v])
             {
                 distances[v] = distances[min_index] + 1;
-                PathNode *new_node = (PathNode *)malloc(sizeof(PathNode));
-                new_node->node = min_index;
-                new_node->next = landmark_paths[i][j]->head;
-                landmark_paths[i][j]->head = new_node;
+                predesessor[v] = min_index;
             }
+
             curr = curr->neighbors;
-
         }
-
     }
-
-    int path_length = distances[dest];
-    printf("%d\n", path_length);
-    // landmark_paths[i][j]->distance = path_length;
-    // PathNode *curr = landmark_paths[i][j]->head;
-    // while (curr != NULL)
-    // {
-    //     PathNode *temp = curr;
-    //     curr = curr->next;
-    //     free(temp);
-    // }
-    // landmark_paths[i][j]->head = NULL;
-    // }
-    // }
+    landmark_paths[i][j]->distance = distances[dest];
+    landmark_paths[i][j]->head = constructPath(predesessor, src, dest);
+    // store the path in landmark_paths[i][j]
     printf("HI\n");
+}
+
+void print_djikstra_landmark_path(int src, int dest)
+{
+    printf("Shortest path %d\n", landmark_paths[src][dest]->distance);
+    PathNode *curr = landmark_paths[src][dest]->head;
+    while (curr != NULL)
+    {
+        printf("%d ", curr->node);
+        curr = curr->next;
+    }
 }
 
 void performPathFind(Graph *graph)
 {
     // node to landmark distance
     djikstra_landmark(graph, partitions, gl_landmark, landmark_paths);
+    // int src = 0;
+    // int dest = 4;
+    // print_djikstra_landmark_path(src, dest);
+
+
+
     // landmark to landmark distance
 }
 

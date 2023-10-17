@@ -61,7 +61,15 @@ void remove_edge(Graph *graph, int node_src, int node_dest);
 void log_update(char *type, int node0, int node1);
 void performGraphUpdate(Graph *graph);
 double random_uniform();
+int edge_exists(Node *node, int value);
 void *pathFinderThread(void *arg);
+void performPathFind(Graph *graph);
+void initialise_landmark_paths();
+void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, Path *landmark_paths[][100]);
+int minDistance_djikstra(int distances[], int visited[], int num_nodes);
+PathNode *constructPath(int predesessor[], int src, int dest);
+void print_djikstra_landmark_path(int src, int dest);
+
 void *pathStitcherThread(void *arg);
 
 // Function to read the edgelist and create the initial graph
@@ -443,6 +451,17 @@ void *graphUpdateThread(void *data)
 
 // ############################################################################################################
 
+void print_djikstra_landmark_path(int src, int dest)
+{
+    printf("Shortest path %d\n", landmark_paths[src][dest]->distance);
+    PathNode *curr = landmark_paths[src][dest]->head;
+    while (curr != NULL)
+    {
+        printf("%d ", curr->node);
+        curr = curr->next;
+    }
+}
+
 PathNode *constructPath(int predesessor[], int src, int dest)
 {
     PathNode *head = NULL;
@@ -503,7 +522,7 @@ void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, 
     int num_landmarks = gl_landmark;
     // for (int i = 0; i < num_landmarks; i++)
     // {
-    //     for (int j = 0; j < num_landmarks; j++)
+    //     for (int j = 0; j < i; j++)
     //     {
     int i = 0;
     int j = 4;
@@ -543,19 +562,11 @@ void djikstra_landmark(Graph *graph, Partition *partitions, int num_partitions, 
     }
     landmark_paths[i][j]->distance = distances[dest];
     landmark_paths[i][j]->head = constructPath(predesessor, src, dest);
+    // print_djikstra_landmark_path(src, dest);
     // store the path in landmark_paths[i][j]
+    // }
+    // }
     printf("HI\n");
-}
-
-void print_djikstra_landmark_path(int src, int dest)
-{
-    printf("Shortest path %d\n", landmark_paths[src][dest]->distance);
-    PathNode *curr = landmark_paths[src][dest]->head;
-    while (curr != NULL)
-    {
-        printf("%d ", curr->node);
-        curr = curr->next;
-    }
 }
 
 void performPathFind(Graph *graph)

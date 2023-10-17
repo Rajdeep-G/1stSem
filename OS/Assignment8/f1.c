@@ -19,6 +19,15 @@ typedef struct Graph
     Node *nodes; // Array of nodes
 } Graph;
 
+typedef struct Partition
+{
+    int num_nodes;
+    int *nodes;
+    int landmark;
+} Partition;
+// Partition *partitions = (Partition *)malloc(sizeof(Partition) * num_partitions);
+Partition partitions[100];
+
 // function definitions
 
 void createInitialGraph(Graph *graph);
@@ -134,24 +143,48 @@ int count_neighbors(Node *node)
 
 void write_landmark_log(int *landmark_indices, Graph *graph, int num_partitions, int num_landmarks)
 {
+
     FILE *landmark_log = fopen("landmark.log", "w");
     if (landmark_log == NULL)
     {
         perror("Error opening landmark.log file");
         exit(1);
     }
+    
+    for (int i = 0; i < num_partitions; i++)
+    {
+        partitions[i].nodes = (int *)malloc(sizeof(int) * graph->num_nodes);
+        partitions[i].num_nodes = 0;
+        partitions[i].landmark = -1;
+    }
     for (int i = 0; i < num_partitions; i++)
     {
         fprintf(landmark_log, "%d ", landmark_indices[i]);
-        for (int j = 0; j < graph->num_nodes; j++)
+        partitions[i].landmark = landmark_indices[i];
+        int j;
+        int c = 0;
+        for (j = 0; j < graph->num_nodes; j++)
         {
             if (graph->nodes[j].partition == i % num_partitions)
+            {
                 fprintf(landmark_log, "%d ", j);
+                // partitions[i].nodes[j] = j;
+                partitions[i].nodes[c++] = j;
+            }
         }
         fprintf(landmark_log, "\n");
+        partitions[i].num_nodes = c;
+        // partitions->num_nodes = j;
     }
 
     fclose(landmark_log);
+
+    for (int m = 0; m < 4; m++)
+    {
+        printf("%d ", partitions[m].landmark);
+        printf("%d ", partitions[m].num_nodes);
+        printf("\n");
+    }
 }
 
 void chooseLandmarkNodes(Graph *graph)
@@ -218,6 +251,7 @@ void chooseLandmarkNodes(Graph *graph)
     }
 
     write_landmark_log(landmark_indices, graph, num_partitions, num_total_landmarks);
+
 }
 
 void createRandomPairs(Graph *graph)
@@ -338,10 +372,10 @@ void log_update(char *type, int node0, int node1)
 void performGraphUpdate(Graph *graph)
 {
 
-   static int num = 0;
-    if (random_uniform() < 0.2) 
+    static int num = 0;
+    if (random_uniform() < 0.2)
     {
-        
+
         int node0 = 0;
         int node1 = 0;
         while (1)
@@ -383,7 +417,6 @@ void performGraphUpdate(Graph *graph)
 void *graphUpdateThread(void *data)
 {
     Graph *graph = (Graph *)data;
-    static int num = 0;
     performGraphUpdate(graph);
     return NULL;
 }
@@ -391,6 +424,30 @@ void *graphUpdateThread(void *data)
 // Function for path_finder threads
 void *pathFinderThread(void *arg)
 {
+    // Eachthreadwilljustkeeponfindingpathsbetweenlandmarksandforeachpartitionfind
+    // pathsbetweennodesinthatpartitionandthelandmarknode.UseDijkstra’salgorithm
+    // tofindtheshortestpathsbetweennodes.
+    Graph *graph = (Graph *)arg;
+    // while (1)
+    // {
+    //     int source, target_partition;
+    //     FILE *path_log = fopen("path_to_find.log", "r");
+    //     if (path_log == NULL)
+    //     {
+    //         perror("Error opening path_to_find.log file");
+    //         exit(1);
+    //     }
+    //     while (!feof(path_log))
+    //     {
+    //         fscanf(path_log, "%d %d", &source, &target_partition);
+    //         // printf("%d %d\n", source, target_partition);
+    //         // printf("HI lock\n");
+    //         pthread_mutex_lock(&log_mutex);
+    //         // printf("HI lock\n");
+    //         // printf("HI unlock\n");
+    //         pthread_mutex_unlock(&log_mutex);
+    //     }
+    // }
 }
 
 // Function for path_stitcher threads
@@ -424,6 +481,7 @@ int main()
     createRandomPairs(&graph);
 
     pthread_t graph_update_threads[5];
+    pthread_t path_finder_threads[20];
 
     // .........................
     int error;
@@ -436,8 +494,20 @@ int main()
                    strerror(error));
     }
 
+    for (int i = 0; i < 20; i++)
+    {
+        error = pthread_create(&(path_finder_threads[i]), NULL, pathFinderThread, &graph);
+        if (error != 0)
+            printf("\nThread can't be created :[%s]",
+                   strerror(error));
+    }
+
     for (int i = 0; i < 5; i++)
         pthread_join(graph_update_threads[i], NULL);
+
+    for (int i = 0; i < 20; i++)
+        pthread_join(path_finder_threads[i], NULL);
+
     pthread_mutex_destroy(&log_mutex);
 
     // .............................

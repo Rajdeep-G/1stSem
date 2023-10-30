@@ -22,16 +22,15 @@ void log_ping_request(struct sockaddr_in client_address, double rtt)
         perror("Error opening log file");
         return;
     }
-    flock(fd, LOCK_EX);
-    FILE *log_file = fdopen(fd, "a");
-    if (log_file != NULL)
-    {
-        fprintf(log_file, "Client IP: %s  Client port: %d  RTT: %.6f seconds\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), rtt);
-        fclose(log_file);
-    }
-    else
-        perror("Error opening log file");
 
+    FILE *log_file = fdopen(fd, "a");
+    if (log_file == NULL)
+    {
+        perror("Error opening log file");
+        return;
+    }
+    flock(fd, LOCK_EX);
+    fprintf(log_file, "Client IP: %s  Client port: %d  RTT: %.6f seconds\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), rtt);
     flock(fd, LOCK_UN);
     close(fd);
 }
@@ -58,9 +57,9 @@ void handle_ping_request(int client_socket, struct sockaddr_in client_address)
             // // continue;
             return;
         }
-clock_gettime(CLOCK_MONOTONIC, &end_time);
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
         send(client_socket, buffer, n, 0);
-        
+
         double start_time_in_seconds = start_time.tv_sec + start_time.tv_nsec / 1e9;
         double end_time_in_seconds = end_time.tv_sec + end_time.tv_nsec / 1e9;
         double rtt = end_time_in_seconds - start_time_in_seconds;

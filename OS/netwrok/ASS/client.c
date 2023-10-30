@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <time.h>
 
-// #define PORT 8080
 #define MAX_BUFFER_SIZE 1024
 
 void send_ping_request(const char *ip, int port, int num_req, int interval)
@@ -53,7 +52,6 @@ void send_ping_request(const char *ip, int port, int num_req, int interval)
         double start_time_in_seconds = start_time.tv_sec + start_time.tv_nsec / 1e9;
         double end_time_in_seconds = end_time.tv_sec + end_time.tv_nsec / 1e9;
         double rtt = end_time_in_seconds - start_time_in_seconds;
-
         printf("Received: %s, RTT: %.6f seconds\n", buffer, rtt);
         sleep(interval);
     }

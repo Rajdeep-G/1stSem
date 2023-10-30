@@ -14,25 +14,18 @@ void handle_ping_request(int client_socket)
 {
     char buffer[MAX_BUFFER_SIZE];
     int n;
-    time_t start_time, end_time;
-
-    n = recv(client_socket, buffer, sizeof(buffer), 0);
-    if (n <= 0)
+    while (1)
     {
-        perror("recv");
-        return;
+        n = recv(client_socket, buffer, sizeof(buffer), 0);
+        if (n <= 0)
+        {
+            // perror("recv");
+            return;
+        }
+
+        // Acknowledge the ping request
+        send(client_socket, buffer, n, 0);
     }
-
-    // time(&start_time);
-
-    // Acknowledge the ping request
-    send(client_socket, buffer, n, 0);
-
-    // time(&end_time);
-
-    // double rtt = difftime(end_time, start_time);
-    //
-    // printf("Received: %s, RTT: %.2f seconds\n", buffer, rtt);
 }
 
 int main()
@@ -57,7 +50,6 @@ int main()
     server_address.sin_port = port;
     server_address.sin_addr.s_addr = inet_addr(ip);
 
-
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
     {
         perror("[-]Bind error");
@@ -78,9 +70,10 @@ int main()
         exit(EXIT_FAILURE);
     }
     printf("[+]Client connected.\n");
+
     handle_ping_request(client_socket);
 
+    printf("[+]Client disconnected.\n");
     close(client_socket);
     close(server_socket);
-
 }

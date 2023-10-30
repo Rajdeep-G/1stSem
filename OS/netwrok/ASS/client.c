@@ -10,11 +10,11 @@
 // #define PORT 8080
 #define MAX_BUFFER_SIZE 1024
 
-void send_ping_request()
+void send_ping_request(const char *ip, int port, int num_req, int interval)
 {
     int client_socket;
-    char *ip = "127.0.0.1";
-    int port = 5566;
+    // char *ip = "127.0.0.1";
+    // int port = 5566;
     struct sockaddr_in server_address;
     struct timespec start_time, end_time;
     char buffer[MAX_BUFFER_SIZE];
@@ -37,30 +37,44 @@ void send_ping_request()
         exit(1);
     }
     printf("Connected to the server.\n");
-    bzero(buffer, 1024);
-    const char *ping_request = "Ping request";
 
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    while (num_req--)
+    {
+        bzero(buffer, 1024);
+        const char *ping_request = "Ping request";
 
-    send(client_socket, ping_request, strlen(ping_request), 0);
-    recv(client_socket, buffer, sizeof(buffer), 0);
+        clock_gettime(CLOCK_MONOTONIC, &start_time);
 
-    clock_gettime(CLOCK_MONOTONIC, &end_time);
+        send(client_socket, ping_request, strlen(ping_request), 0);
+        recv(client_socket, buffer, sizeof(buffer), 0);
 
-    double start_time_in_seconds = start_time.tv_sec + start_time.tv_nsec / 1e9;
-    double end_time_in_seconds = end_time.tv_sec + end_time.tv_nsec / 1e9;
-    double rtt = end_time_in_seconds - start_time_in_seconds;
+        clock_gettime(CLOCK_MONOTONIC, &end_time);
 
-    printf("Received: %s, RTT: %.6f seconds\n", buffer, rtt);
+        double start_time_in_seconds = start_time.tv_sec + start_time.tv_nsec / 1e9;
+        double end_time_in_seconds = end_time.tv_sec + end_time.tv_nsec / 1e9;
+        double rtt = end_time_in_seconds - start_time_in_seconds;
+
+        printf("Received: %s, RTT: %.6f seconds\n", buffer, rtt);
+        sleep(interval);
+    }
+
     close(client_socket);
     printf("Disconnected from the server.\n");
 }
 
-int main()
+int main(int argc, char const *argv[])
 {
-    const char *server_ip = "127.0.0.1"; // Hardcoded server IP
+    if (argc != 5)
+    {
+        printf("Usage: ./client <server_ip> <server_port> <num_requests> <interval>\n");
+        exit(1);
+    }
+    const char *server_ip = argv[1];
+    int server_port = atoi(argv[2]);
+    int num_requests = atoi(argv[3]);
+    int interval = atoi(argv[4]);
 
-    send_ping_request();
+    send_ping_request(server_ip, server_port, num_requests, interval);
 
     return 0;
 }

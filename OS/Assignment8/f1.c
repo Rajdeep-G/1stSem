@@ -414,7 +414,6 @@ void performGraphUpdate(Graph *graph)
                 break;
         }
         pthread_mutex_lock(&log_mutex);
-        // printf("HI lock add\n");
         add_edge(graph, node0, node1);
         log_update("ADD", node0, node1);
         pthread_mutex_unlock(&log_mutex);
@@ -576,8 +575,6 @@ void performPathFind(Graph *graph)
     // int src = 0;
     // int dest = 4;
     // print_djikstra_landmark_path(src, dest);
-
-
 
     // landmark to landmark distance
 }

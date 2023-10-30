@@ -5,8 +5,10 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <time.h>
 #include <sys/file.h> // For file locking
+#include <fcntl.h>    // For file locking
 
 #define TIMEOUT_SEC 5 // Timeout value in seconds
 #define PORT 5566
@@ -14,28 +16,35 @@
 #define MAX_BUFFER_SIZE 1024
 #define LOG_FILE "ping_log.txt"
 
-void log_ping_request(struct sockaddr_in client_address, double rtt)
+void log_ping_request(char *client_ip, int client_port, double rtt)
 {
-    int fd = open(LOG_FILE, O_WRONLY | O_CREAT, 0644);
+    printf("Client IP: %s  Client port: %d  RTT: %.6f seconds\n", client_ip, client_port, rtt);
+    
+    // open the file and write to it and use locks
+    int fd = open(LOG_FILE, O_WRONLY | O_APPEND | O_CREAT, 0644);
     if (fd == -1)
     {
-        perror("Error opening log file");
-        return;
+        perror("open");
+        exit(EXIT_FAILURE);
     }
-
-    FILE *log_file = fdopen(fd, "a");
-    if (log_file == NULL)
+    if (flock(fd, LOCK_EX) == -1)
     {
-        perror("Error opening log file");
-        return;
+        perror("flock");
+        exit(EXIT_FAILURE);
     }
-    flock(fd, LOCK_EX);
-    fprintf(log_file, "Client IP: %s  Client port: %d  RTT: %.6f seconds\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), rtt);
-    flock(fd, LOCK_UN);
+    char buffer[MAX_BUFFER_SIZE];
+    sprintf(buffer, "Client IP: %s  Client port: %d  RTT: %.6f seconds\n", client_ip, client_port, rtt);
+    write(fd, buffer, strlen(buffer));
+    if (flock(fd, LOCK_UN) == -1)
+    {
+        perror("flock");
+        exit(EXIT_FAILURE);
+    }
     close(fd);
+    
 }
 
-void handle_ping_request(int client_socket, struct sockaddr_in client_address)
+void handle_ping_request(int client_socket)
 {
     char buffer[MAX_BUFFER_SIZE];
     int n;
@@ -44,7 +53,23 @@ void handle_ping_request(int client_socket, struct sockaddr_in client_address)
     timeout.tv_sec = TIMEOUT_SEC;
     timeout.tv_usec = 0;
     struct timespec start_time, end_time;
-    int port_no = client_address.sin_port;
+    struct sockaddr_in client_address;
+    socklen_t client_address_len = sizeof(client_address);
+
+    // Get the client's address information
+    if (getpeername(client_socket, (struct sockaddr *)&client_address, &client_address_len) == -1)
+    {
+        perror("getpeername");
+        return;
+    }
+
+    char client_ip[INET_ADDRSTRLEN];
+    int client_port;
+
+    // Convert IP address from binary to string
+    inet_ntop(AF_INET, &(client_address.sin_addr), client_ip, INET_ADDRSTRLEN);
+    client_port = ntohs(client_address.sin_port);
+
     while (1)
     {
         // setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
@@ -63,7 +88,7 @@ void handle_ping_request(int client_socket, struct sockaddr_in client_address)
         double start_time_in_seconds = start_time.tv_sec + start_time.tv_nsec / 1e9;
         double end_time_in_seconds = end_time.tv_sec + end_time.tv_nsec / 1e9;
         double rtt = end_time_in_seconds - start_time_in_seconds;
-        log_ping_request(client_address, rtt);
+        log_ping_request(client_ip, client_port, rtt);
     }
 }
 
@@ -112,8 +137,10 @@ int main()
         }
         printf("[+]Client connected.\n");
 
-        handle_ping_request(client_socket, client_address);
-
+        // handle_ping_request(client_socket, client_address);
+        handle_ping_request(client_socket);
+        // pthread_t thread;
+        // pthread_create(&thread, NULL, handle_ping_request, (void *)&client_socket);
         printf("[+]Client disconnected.\n");
         close(client_socket);
     }

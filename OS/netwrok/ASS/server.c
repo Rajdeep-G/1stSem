@@ -19,7 +19,7 @@
 void log_ping_request(char *client_ip, int client_port, double rtt)
 {
     printf("Client IP: %s  Client port: %d  RTT: %.6f seconds\n", client_ip, client_port, rtt);
-    
+
     // open the file and write to it and use locks
     int fd = open(LOG_FILE, O_WRONLY | O_APPEND | O_CREAT, 0644);
     if (fd == -1)
@@ -41,11 +41,11 @@ void log_ping_request(char *client_ip, int client_port, double rtt)
         exit(EXIT_FAILURE);
     }
     close(fd);
-    
 }
 
-void handle_ping_request(int client_socket)
+void handle_ping_request(void *arg)
 {
+    int client_socket = *(int *)arg;
     char buffer[MAX_BUFFER_SIZE];
     int n;
 
@@ -72,14 +72,12 @@ void handle_ping_request(int client_socket)
 
     while (1)
     {
-        // setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
         clock_gettime(CLOCK_MONOTONIC, &start_time);
         n = recv(client_socket, buffer, sizeof(buffer), 0);
         if (n <= 0)
         {
-            // printf("Timeout or packet loss, retransmitting acknowledgment\n");
-            // send(client_socket, buffer, n, 0);
-            // // continue;
+            printf("[-]Client disconnected.\n");
             return;
         }
         clock_gettime(CLOCK_MONOTONIC, &end_time);
@@ -90,6 +88,8 @@ void handle_ping_request(int client_socket)
         double rtt = end_time_in_seconds - start_time_in_seconds;
         log_ping_request(client_ip, client_port, rtt);
     }
+    close(client_socket);
+    pthread_exit(NULL);
 }
 
 int main()
@@ -121,7 +121,6 @@ int main()
         exit(1);
     }
 
-    // Listen for incoming connections
     if (listen(server_socket, 5) == -1)
     {
         perror("listen");
@@ -137,12 +136,17 @@ int main()
         }
         printf("[+]Client connected.\n");
 
-        // handle_ping_request(client_socket, client_address);
-        handle_ping_request(client_socket);
-        // pthread_t thread;
+        pthread_t thread;
+        if (pthread_create(&thread, NULL, handle_ping_request, (void *)&client_socket) != 0)
+        {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
         // pthread_create(&thread, NULL, handle_ping_request, (void *)&client_socket);
-        printf("[+]Client disconnected.\n");
-        close(client_socket);
+
+        // handle_ping_request(client_socket);
+        // printf("[+]Client disconnected.\n");
+        // close(client_socket);
     }
     close(server_socket);
 }

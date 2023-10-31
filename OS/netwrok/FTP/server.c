@@ -164,7 +164,7 @@ void handle_FTP(void *arg)
             }
             else
             {
-                
+
                 fseek(file, 0, SEEK_END);
                 long file_size = ftell(file);
                 fseek(file, 0, SEEK_SET);
@@ -211,7 +211,7 @@ void handle_FTP(void *arg)
             {
                 char response[] = "250 Directory successfully changed.\r\n";
                 send(client_socket, response, strlen(response), 0);
-                // system("pwd > pwd.txt"); just for checking 
+                system("pwd > pwd.txt"); //just for checking
             }
             else
             {
@@ -219,7 +219,7 @@ void handle_FTP(void *arg)
                 send(client_socket, response, strlen(response), 0);
             }
         }
-        
+
         else
         {
             char response[] = "500 Syntax error, command unrecognized\r\n";

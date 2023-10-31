@@ -50,7 +50,13 @@ void handle_FTP(void *arg)
             char *filename = strtok(buffer, " ");
             filename = strtok(NULL, " ");
             printf("[+]Receive file name: %s\n", filename);
-            FILE *file = fopen(filename, "wb");
+            // modify the file name to filename+servercreated
+            char *new_filename = malloc(strlen(filename) + 20);
+            strcpy(new_filename, filename);
+            new_filename[strlen(new_filename) - 1] = '\0';
+            strcat(new_filename, "_servercreated");
+
+            FILE *file = fopen(new_filename, "wb");
             if (file == NULL)
             {
                 char response[] = "550 Failed to open file for writing\r\n";
@@ -68,10 +74,9 @@ void handle_FTP(void *arg)
                 int no_chunk = file_size / MAX_BUFFER_SIZE;
                 // round up
                 if (file_size % MAX_BUFFER_SIZE != 0)
-                {
                     no_chunk++;
-                }
-                printf("[+]Receive number of chunks: %d\n", no_chunk);
+
+                // printf("[+]Receive number of chunks: %d\n", no_chunk);
                 while (n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0))
                 {
                     if (n <= 0)
@@ -80,7 +85,7 @@ void handle_FTP(void *arg)
                         break;
                     }
                     buffer[n] = '\0';
-                    printf("[+]Receive from client: %s\n", buffer);
+                    // printf("[+]Receive from client: %s\n", buffer);
                     fwrite(buffer, sizeof(char), n, file);
                     no_chunk--;
                     if (no_chunk == 0)

@@ -164,9 +164,7 @@ void handle_FTP(void *arg)
             }
             else
             {
-                // printf("[+]File opened succ.\n");
-                // char response[] = "150 File OK\r\n";
-                // send(client_socket, response, strlen(response), 0);
+                
                 fseek(file, 0, SEEK_END);
                 long file_size = ftell(file);
                 fseek(file, 0, SEEK_SET);
@@ -246,7 +244,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(22); // Port 21 for FTP
+    server_address.sin_port = htons(21); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

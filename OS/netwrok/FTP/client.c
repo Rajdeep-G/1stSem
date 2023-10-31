@@ -46,12 +46,6 @@ int handle_ftp(char *command)
     printf("Connected to the server.\n");
     recv(client_socket, buffer, sizeof(buffer), 0);
     printf("Received: %s\n", buffer);
-    // while (1)
-    // {
-    //     int choice = 0;
-    //     printf("1. get\n2. put\n3. quit\n4.cd\n5.ls\n");
-    //     scanf("%d", &choice);
-    //     if (choice == 1)
     if (strcmp(input[0], "get") == 0)
     {
         char get_command[100];
@@ -59,9 +53,6 @@ int handle_ftp(char *command)
         strcat(get_command, " ");
         strcat(get_command, input[1]);
         strcat(get_command, "\r\n");
-
-        //
-        //         char get_command[] = "get f1.txt\r\n";
         send(client_socket, get_command, strlen(get_command), 0);
         // receive the file size
         n = recv(client_socket, buffer, sizeof(buffer), 0);
@@ -82,7 +73,7 @@ int handle_ftp(char *command)
         char downloaded_file_name[100];
         strcpy(downloaded_file_name, input[1]);
         downloaded_file_name[strlen(downloaded_file_name) - 4] = '\0';
-        strcat(downloaded_file_name, "_down.txt");
+        strcat(downloaded_file_name, "_download.txt");
         FILE *file = fopen(downloaded_file_name, "wb");
         if (file == NULL)
         {
@@ -162,7 +153,7 @@ int handle_ftp(char *command)
             printf("SERVER RESPONSE %s\n", buffer);
         }
     }
-    else if (strcmp(input[0],"quit")==0)
+    else if (strcmp(input[0], "quit") == 0)
     {
         char quit_command[] = "quit\r\n";
         send(client_socket, quit_command, strlen(quit_command), 0);
@@ -174,66 +165,69 @@ int handle_ftp(char *command)
         }
         return 0;
     }
-        else if (strcmp(input[0],"cd")==0)
+    else if (strcmp(input[0], "cd") == 0)
+    {
+        // char cd_command[] = "cd t1\r\n";
+        char cd_command[100];
+        strcpy(cd_command, command);
+        strcat(cd_command, " ");
+        strcat(cd_command, input[1]);
+        strcat(cd_command, "\r\n");
+
+        send(client_socket, cd_command, strlen(cd_command), 0);
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
         {
-            // char cd_command[] = "cd t1\r\n";
-            char cd_command[100];
-            strcpy(cd_command, command);
-            strcat(cd_command, " ");
-            strcat(cd_command, input[1]);
-            strcat(cd_command, "\r\n");
-            
-            send(client_socket, cd_command, strlen(cd_command), 0);
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
+    }
+    else if (strcmp(input[0], "ls") == 0)
+    {
+
+        char ls_command[100];
+        strcpy(ls_command, command);
+        strcat(ls_command, "\r\n");
+        send(client_socket, ls_command, strlen(ls_command), 0);
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        // if (n > 0)
+        // {
+        //     buffer[n] = '\0';
+        //     printf("SERVER RESPONSE of chunk size %s\n", buffer);
+        // }
+        char msg[] = "1";
+        send(client_socket, msg, strlen(msg), 0);
+
+        int no_chunk = atoi(buffer);
+        char *file_buffer = (char *)malloc(no_chunk * MAX_BUFFER_SIZE * sizeof(char));
+        int i = 0;
+        while (i < no_chunk)
+        {
             n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
             if (n > 0)
             {
                 buffer[n] = '\0';
-                printf("SERVER RESPONSE %s\n", buffer);
+
+                strcat(file_buffer, buffer);
             }
+            i++;
         }
-    //     else if (choice == 5)
-    //     {
-    //         char ls_command[] = "ls\r\n";
-    //         send(client_socket, ls_command, strlen(ls_command), 0);
-    //         n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
-    //         if (n > 0)
-    //         {
-    //             buffer[n] = '\0';
-    //             printf("SERVER RESPONSE %s\n", buffer);
-    //         }
-    //         n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
-    //         // if (n > 0)
-    //         // {
-    //         //     buffer[n] = '\0';
-    //         //     printf("SERVER RESPONSE of chunk size %s\n", buffer);
-    //         // }
-    //         char msg[] = "1";
-    //         send(client_socket, msg, strlen(msg), 0);
+        printf("SERVER RESPONSE of \"ls\" \n%s\n", file_buffer);
 
-    //         int no_chunk = atoi(buffer);
-    //         char *file_buffer = (char *)malloc(no_chunk * MAX_BUFFER_SIZE * sizeof(char));
-    //         int i = 0;
-    //         while (i < no_chunk)
-    //         {
-    //             n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
-    //             if (n > 0)
-    //             {
-    //                 buffer[n] = '\0';
+        printf("Finished\n");
+    }
+    else
+    {
+        printf("Invalid choice\n");
+        exit(1);
+    }
 
-    //                 strcat(file_buffer, buffer);
-    //             }
-    //             i++;
-    //         }
-    //         printf("SERVER RESPONSE of \"ls\" \n%s\n", file_buffer);
-
-    //         printf("Finished\n");
-    //     }
-    //     else
-    //     {
-    //         printf("Invalid choice\n");
-    //         exit(1);
-    //     }
-    // }
     close(client_socket);
     printf("Disconnected from the server.\n");
 }
@@ -251,10 +245,8 @@ int main(int argc, char const *argv[])
         user_input[strcspn(user_input, "\n")] = '\0';
 
         if (strcmp(user_input, "exit") == 0)
-        {
-            // printf("ccc");
             return 0;
-        }
+
         else if (strcmp(user_input, "help") == 0)
         {
             printf("Available commands:\n");

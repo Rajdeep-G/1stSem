@@ -44,8 +44,8 @@ void handle_FTP(void *arg)
             // modify the file name to filename+servercreated
             char *new_filename = malloc(strlen(filename) + 20);
             strcpy(new_filename, filename);
-            new_filename[strlen(new_filename) - 1] = '\0';
-            strcat(new_filename, "_servercreated");
+            new_filename[strlen(new_filename) - 4] = '\0';
+            strcat(new_filename, "_uploaded.txt");
 
             FILE *file = fopen(new_filename, "wb");
             if (file == NULL)

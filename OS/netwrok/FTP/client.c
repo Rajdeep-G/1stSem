@@ -9,7 +9,7 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 22
+#define SERVER_PORT 21
 void handle_ftp()
 {
     int client_socket;
@@ -151,7 +151,14 @@ void handle_ftp()
     }
     else if (choice == 4)
     {
-        printf("going on");
+        char cd_command[] = "cd t1\r\n";
+        send(client_socket, cd_command, strlen(cd_command), 0);
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
     }
     else if (choice == 5)
     {
@@ -181,7 +188,7 @@ void handle_ftp()
             if (n > 0)
             {
                 buffer[n] = '\0';
-                // printf("SERVER RESPONSE %s\n", buffer);
+                
                 strcat(file_buffer, buffer);
             }
             i++;

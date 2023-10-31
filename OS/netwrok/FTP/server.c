@@ -181,29 +181,32 @@ void handle_FTP(void *arg)
                 // send the no of chunks
                 char buffer2[10];
                 sprintf(buffer2, "%d", no_chunk);
-               
 
                 send(client_socket, buffer2, strlen(buffer2), 0);
 
-
-                n=read(client_socket, buffer, MAX_BUFFER_SIZE);
-                buffer[n]='\0';
-                printf("buffer: %s\n",buffer);
-                
+                n = read(client_socket, buffer, MAX_BUFFER_SIZE);
+                buffer[n] = '\0';
+                printf("buffer: %s\n", buffer);
 
                 while ((n = fread(buffer, 1, MAX_BUFFER_SIZE, file)) > 0)
                 {
                     send(client_socket, buffer, n, 0);
                 }
-                
+
                 fclose(file);
-                
             }
         }
 
         else if ((strstr(buffer, "cd") == buffer))
         {
-            continue;
+           //change the directory to the specified directory
+            char *directory = strtok(buffer, " ");
+            directory = strtok(NULL, " ");
+            printf("[+]Receive directory name: %s\n", directory);
+            chdir(directory);
+            system("ls > lstest.txt");
+            char response[] = "250 Directory successfully changed.\r\n";
+            send(client_socket, response, strlen(response), 0); 
         }
         else
         {
@@ -220,10 +223,6 @@ int main()
     struct sockaddr_in server_address, client_address;
     socklen_t client_address_len = sizeof(client_address);
 
-    // char *ip = "127.0.0.1";
-    char *ip = IP;
-    int port = PORT;
-    // Create socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0)
     {
@@ -233,7 +232,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(22); // Port 21 for FTP
+    server_address.sin_port = htons(21); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

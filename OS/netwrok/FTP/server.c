@@ -95,9 +95,15 @@ void handle_FTP(void *arg)
         {
             char *filename = strtok(buffer, " ");
             filename = strtok(NULL, " ");
-            printf("%s\n", filename);
+            printf("[+]Receive file name: %s\n", filename);
 
-            FILE *file = fopen("get.txt", "rb");
+            // get the file name and store in a new variable and open it
+            char *new_filename = malloc(strlen(filename) + 20);
+            strcpy(new_filename, filename);
+            new_filename[strlen(new_filename) - 1] = '\0';
+
+            FILE *file = fopen("f1.txt", "rb");
+
             if (file == NULL)
             {
                 perror("[-]Error in reading file.");
@@ -112,8 +118,8 @@ void handle_FTP(void *arg)
                 fseek(file, 0, SEEK_END);
                 long file_size = ftell(file);
                 fseek(file, 0, SEEK_SET);
-                fseek(file, file_size, SEEK_SET);
-                fwrite("EOF", sizeof(char), 3, file);
+                // fseek(file, file_size, SEEK_SET);
+                // fwrite("EOF", sizeof(char), 3, file);
                 fseek(file, 0, SEEK_SET);
 
                 int no_chunk = file_size / MAX_BUFFER_SIZE;
@@ -121,17 +127,20 @@ void handle_FTP(void *arg)
                 if (file_size % MAX_BUFFER_SIZE != 0)
                     no_chunk++;
                 printf("[+]Send number of chunks: %d\n", no_chunk);
-                //send the no of chunks
+                // send the no of chunks
                 sprintf(buffer, "%d", no_chunk);
                 send(client_socket, buffer, strlen(buffer), 0);
 
-                // while ((n = fread(buffer, 1, MAX_BUFFER_SIZE, file)) > 0)
-                // {
-                //     send(client_socket, buffer, n, 0);
-                // }
+                printf("\n");
+
+                while ((n = fread(buffer, 1, MAX_BUFFER_SIZE, file)) > 0)
+                {
+                    send(client_socket, buffer, n, 0);
+                }
+
                 fclose(file);
-                // char response2[] = "226 Transfer complete\r\n";
-                // send(client_socket, response2, strlen(response2), 0);
+                char response2[] = "226 Transfer complete\r\n";
+                send(client_socket, response2, strlen(response2), 0);
             }
         }
 
@@ -158,7 +167,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(21); // Port 21 for FTP
+    server_address.sin_port = htons(23); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

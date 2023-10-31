@@ -9,8 +9,7 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 21
-
+#define SERVER_PORT 23
 void handle_ftp()
 {
     int client_socket;
@@ -43,10 +42,10 @@ void handle_ftp()
     scanf("%d", &choice);
     if (choice == 1)
     {
-        char get_command[] = "get get.txt\r\n";
+        char get_command[] = "get f1.txt\r\n";
         send(client_socket, get_command, strlen(get_command), 0);
         // receive the file size
-        n=recv(client_socket, buffer, sizeof(buffer), 0);
+        n = recv(client_socket, buffer, sizeof(buffer), 0);
         if (n > 0)
         {
             buffer[n] = '\0';
@@ -62,38 +61,41 @@ void handle_ftp()
         }
 
         // // receive the file
-        // FILE *file = fopen("f2.txt", "wb");
-        // if (file == NULL)
-        // {
-        //     perror("[-]Error in creating file.");
-        //     exit(1);
-        // }
-        // int file_size = atoi(buffer);
-        // int no_chunk = file_size / MAX_BUFFER_SIZE;
-        // printf("[+]Send number of chunks: %d\n", no_chunk);
-        // while (no_chunk > 0)
-        // {
-        //     n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
-        //     if (n > 0)
-        //     {
-        //         buffer[n] = '\0';
-        //         // printf("SERVER RESPONSE %s\n", buffer);
-        //         if (strcmp(buffer, "EOF") == 0)
-        //         {
-        //             break;
-        //         }
-        //         fwrite(buffer, sizeof(char), n, file);
-        //     }
-        //     no_chunk--;
-        // }
-        // fclose(file);
-        // printf("[+]File transfer complete.\n");
-        // n=recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
-        // if (n > 0)
-        // {
-        //     buffer[n] = '\0';
-        //     printf("SERVER RESPONSE %s\n", buffer);
-        // }
+        FILE *file = fopen("f1_down.txt", "wb");
+        if (file == NULL)
+        {
+            perror("[-]Error in creating file.");
+            exit(1);
+        }
+        int no_chunk = atoi(buffer);
+
+
+        // create a buffer to store the content of all the chunks of the file
+        char *file_buffer = (char *)malloc(no_chunk * MAX_BUFFER_SIZE * sizeof(char));
+        int i = 0;
+        while (i < no_chunk)
+        {
+            n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+            if (n > 0)
+            {
+                buffer[n] = '\0';
+                // printf("SERVER RESPONSE %s\n", buffer);
+                strcat(file_buffer, buffer);
+            }
+            i++;
+        }
+        fwrite(file_buffer, sizeof(char), strlen(file_buffer), file);
+        
+        
+        fclose(file);
+        printf("[+]File transfer complete.\n");
+
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
     }
     else if (choice == 2)
     {

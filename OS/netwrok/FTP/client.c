@@ -9,7 +9,7 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 21
+#define SERVER_PORT 22
 void handle_ftp()
 {
     int client_socket;

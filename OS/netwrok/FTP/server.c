@@ -96,13 +96,12 @@ void handle_FTP(void *arg)
             char *filename = strtok(buffer, " ");
             filename = strtok(NULL, " ");
             printf("[+]Receive file name: %s\n", filename);
-
-            // get the file name and store in a new variable and open it
-            char *new_filename = malloc(strlen(filename) + 20);
-            strcpy(new_filename, filename);
-            new_filename[strlen(new_filename) - 1] = '\0';
-
-            FILE *file = fopen("f1.txt", "rb");
+            char *newline = strchr(filename, '\r');
+            if (newline != NULL)
+            {
+                *newline = '\0';
+            }
+            FILE *file = fopen(filename, "rb");
 
             if (file == NULL)
             {
@@ -194,20 +193,35 @@ void handle_FTP(void *arg)
                 }
 
                 fclose(file);
+                system("rm ls.txt");
             }
         }
 
         else if ((strstr(buffer, "cd") == buffer))
         {
-           //change the directory to the specified directory
+            // change the directory to the specified directory
             char *directory = strtok(buffer, " ");
             directory = strtok(NULL, " ");
+            char *newline = strchr(directory, '\r');
+            if (newline != NULL)
+            {
+                *newline = '\0';
+            }
             printf("[+]Receive directory name: %s\n", directory);
-            chdir(directory);
-            system("ls > lstest.txt");
-            char response[] = "250 Directory successfully changed.\r\n";
-            send(client_socket, response, strlen(response), 0); 
+            int check = chdir(directory);
+            if (check == 0)
+            {
+                char response[] = "250 Directory successfully changed.\r\n";
+                send(client_socket, response, strlen(response), 0);
+                // system("pwd > pwd.txt"); just for checking 
+            }
+            else
+            {
+                char response[] = "550 Failed to change directory.\r\n";
+                send(client_socket, response, strlen(response), 0);
+            }
         }
+        
         else
         {
             char response[] = "500 Syntax error, command unrecognized\r\n";
@@ -232,7 +246,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(21); // Port 21 for FTP
+    server_address.sin_port = htons(22); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

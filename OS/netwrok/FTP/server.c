@@ -23,15 +23,6 @@ void handle_FTP(void *arg)
 
     struct sockaddr_in client_address;
     socklen_t client_address_len = sizeof(client_address);
-    // if (getpeername(client_socket, (struct sockaddr *)&client_address, &client_address_len) == -1) // Get client IP and port
-    // {
-    //     perror("getpeername");
-    //     return;
-    // }
-    // char client_ip[INET_ADDRSTRLEN];
-    // int client_port;
-    // inet_ntop(AF_INET, &(client_address.sin_addr), client_ip, INET_ADDRSTRLEN); // Convert IP from binary to text form
-    // client_port = ntohs(client_address.sin_port);                               // Convert port from network byte order to host byte order
 
     char welcome_msg[] = "220 Anonymous FTP server ready.\r\n";
     send(client_socket, welcome_msg, strlen(welcome_msg), 0);
@@ -99,6 +90,51 @@ void handle_FTP(void *arg)
                 send(client_socket, response2, strlen(response2), 0);
             }
         }
+
+        else if ((strstr(buffer, "get") == buffer))
+        {
+            char *filename = strtok(buffer, " ");
+            filename = strtok(NULL, " ");
+            printf("%s\n", filename);
+
+            FILE *file = fopen("get.txt", "rb");
+            if (file == NULL)
+            {
+                perror("[-]Error in reading file.");
+                exit(1);
+            }
+            else
+            {
+                printf("[+]File opened succ.\n");
+                char response[] = "150 File OK\r\n";
+                send(client_socket, response, strlen(response), 0);
+                // send the file size
+                fseek(file, 0, SEEK_END);
+                long file_size = ftell(file);
+                fseek(file, 0, SEEK_SET);
+                fseek(file, file_size, SEEK_SET);
+                fwrite("EOF", sizeof(char), 3, file);
+                fseek(file, 0, SEEK_SET);
+
+                int no_chunk = file_size / MAX_BUFFER_SIZE;
+                // round up
+                if (file_size % MAX_BUFFER_SIZE != 0)
+                    no_chunk++;
+                printf("[+]Send number of chunks: %d\n", no_chunk);
+                //send the no of chunks
+                sprintf(buffer, "%d", no_chunk);
+                send(client_socket, buffer, strlen(buffer), 0);
+
+                // while ((n = fread(buffer, 1, MAX_BUFFER_SIZE, file)) > 0)
+                // {
+                //     send(client_socket, buffer, n, 0);
+                // }
+                fclose(file);
+                // char response2[] = "226 Transfer complete\r\n";
+                // send(client_socket, response2, strlen(response2), 0);
+            }
+        }
+
         close(client_socket);
         pthread_exit(NULL);
     }
@@ -122,7 +158,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(22); // Port 21 for FTP
+    server_address.sin_port = htons(21); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

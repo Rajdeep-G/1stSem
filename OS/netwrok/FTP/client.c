@@ -9,7 +9,7 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 22
+#define SERVER_PORT 21
 
 void handle_ftp()
 {
@@ -43,7 +43,57 @@ void handle_ftp()
     scanf("%d", &choice);
     if (choice == 1)
     {
-        printf("Enter file name: ");
+        char get_command[] = "get get.txt\r\n";
+        send(client_socket, get_command, strlen(get_command), 0);
+        // receive the file size
+        n=recv(client_socket, buffer, sizeof(buffer), 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
+
+        // receive the file chunks
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE of chunk size%s\n", buffer);
+        }
+
+        // // receive the file
+        // FILE *file = fopen("f2.txt", "wb");
+        // if (file == NULL)
+        // {
+        //     perror("[-]Error in creating file.");
+        //     exit(1);
+        // }
+        // int file_size = atoi(buffer);
+        // int no_chunk = file_size / MAX_BUFFER_SIZE;
+        // printf("[+]Send number of chunks: %d\n", no_chunk);
+        // while (no_chunk > 0)
+        // {
+        //     n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        //     if (n > 0)
+        //     {
+        //         buffer[n] = '\0';
+        //         // printf("SERVER RESPONSE %s\n", buffer);
+        //         if (strcmp(buffer, "EOF") == 0)
+        //         {
+        //             break;
+        //         }
+        //         fwrite(buffer, sizeof(char), n, file);
+        //     }
+        //     no_chunk--;
+        // }
+        // fclose(file);
+        // printf("[+]File transfer complete.\n");
+        // n=recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        // if (n > 0)
+        // {
+        //     buffer[n] = '\0';
+        //     printf("SERVER RESPONSE %s\n", buffer);
+        // }
     }
     else if (choice == 2)
     {

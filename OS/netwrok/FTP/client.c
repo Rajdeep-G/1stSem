@@ -9,7 +9,7 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 23
+#define SERVER_PORT 22
 void handle_ftp()
 {
     int client_socket;
@@ -38,7 +38,7 @@ void handle_ftp()
     printf("Received: %s\n", buffer);
 
     int choice = 0;
-    printf("1. get\n2. put\n");
+    printf("1. get\n2. put\n3. quit\n4.cd\n5.ls\n");
     scanf("%d", &choice);
     if (choice == 1)
     {
@@ -69,7 +69,6 @@ void handle_ftp()
         }
         int no_chunk = atoi(buffer);
 
-
         // create a buffer to store the content of all the chunks of the file
         char *file_buffer = (char *)malloc(no_chunk * MAX_BUFFER_SIZE * sizeof(char));
         int i = 0;
@@ -85,8 +84,7 @@ void handle_ftp()
             i++;
         }
         fwrite(file_buffer, sizeof(char), strlen(file_buffer), file);
-        
-        
+
         fclose(file);
         printf("[+]File transfer complete.\n");
 
@@ -139,6 +137,58 @@ void handle_ftp()
             buffer[n] = '\0';
             printf("SERVER RESPONSE %s\n", buffer);
         }
+    }
+    else if (choice == 3)
+    {
+        char quit_command[] = "quit\r\n";
+        send(client_socket, quit_command, strlen(quit_command), 0);
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
+    }
+    else if (choice == 4)
+    {
+        printf("going on");
+    }
+    else if (choice == 5)
+    {
+        char ls_command[] = "ls\r\n";
+        send(client_socket, ls_command, strlen(ls_command), 0);
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        if (n > 0)
+        {
+            buffer[n] = '\0';
+            printf("SERVER RESPONSE %s\n", buffer);
+        }
+        n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+        // if (n > 0)
+        // {
+        //     buffer[n] = '\0';
+        //     printf("SERVER RESPONSE of chunk size %s\n", buffer);
+        // }
+        char msg[] = "1";
+        send(client_socket, msg, strlen(msg), 0);
+
+        int no_chunk = atoi(buffer);
+        char *file_buffer = (char *)malloc(no_chunk * MAX_BUFFER_SIZE * sizeof(char));
+        int i = 0;
+        while (i < no_chunk)
+        {
+            n = recv(client_socket, buffer, MAX_BUFFER_SIZE, 0);
+            if (n > 0)
+            {
+                buffer[n] = '\0';
+                // printf("SERVER RESPONSE %s\n", buffer);
+                strcat(file_buffer, buffer);
+            }
+            i++;
+        }
+        printf("SERVER RESPONSE of \"ls\" \n%s\n", file_buffer);
+        
+        printf("Finished\n");
     }
     else
     {

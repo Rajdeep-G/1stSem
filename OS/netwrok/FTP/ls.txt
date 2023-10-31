@@ -1,0 +1,10 @@
+client
+client.c
+f1.txt
+f1_down.txt
+f2.txt
+f2.txt_servercreated
+ls.txt
+run.sh
+server
+server.c

@@ -144,6 +144,72 @@ void handle_FTP(void *arg)
             }
         }
 
+        else if ((strstr(buffer, "quit") == buffer))
+        {
+            char response[] = "221 Goodbye\r\n";
+            send(client_socket, response, strlen(response), 0);
+            break;
+        }
+
+        else if ((strstr(buffer, "ls") == buffer))
+        {
+            char response[] = "150 Here comes the directory listing.\r\n";
+            send(client_socket, response, strlen(response), 0);
+            system("ls > ls.txt");
+            FILE *file = fopen("ls.txt", "rb");
+
+            if (file == NULL)
+            {
+                perror("[-]Error in reading file.");
+                exit(1);
+            }
+            else
+            {
+                // printf("[+]File opened succ.\n");
+                // char response[] = "150 File OK\r\n";
+                // send(client_socket, response, strlen(response), 0);
+                fseek(file, 0, SEEK_END);
+                long file_size = ftell(file);
+                fseek(file, 0, SEEK_SET);
+                fseek(file, 0, SEEK_SET);
+
+                int no_chunk = file_size / MAX_BUFFER_SIZE;
+                // round up
+                if (file_size % MAX_BUFFER_SIZE != 0)
+                    no_chunk++;
+                printf("[+]Send number of chunks: %d\n", no_chunk);
+                // send the no of chunks
+                char buffer2[10];
+                sprintf(buffer2, "%d", no_chunk);
+               
+
+                send(client_socket, buffer2, strlen(buffer2), 0);
+
+
+                n=read(client_socket, buffer, MAX_BUFFER_SIZE);
+                buffer[n]='\0';
+                printf("buffer: %s\n",buffer);
+                
+
+                while ((n = fread(buffer, 1, MAX_BUFFER_SIZE, file)) > 0)
+                {
+                    send(client_socket, buffer, n, 0);
+                }
+                
+                fclose(file);
+                
+            }
+        }
+
+        else if ((strstr(buffer, "cd") == buffer))
+        {
+            continue;
+        }
+        else
+        {
+            char response[] = "500 Syntax error, command unrecognized\r\n";
+            send(client_socket, response, strlen(response), 0);
+        }
         close(client_socket);
         pthread_exit(NULL);
     }
@@ -167,7 +233,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(23); // Port 21 for FTP
+    server_address.sin_port = htons(22); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

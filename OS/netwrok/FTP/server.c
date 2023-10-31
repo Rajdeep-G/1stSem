@@ -117,7 +117,7 @@ int main()
     printf("[+]TCP server socket created.\n");
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(21); // Port 21 for FTP
+    server_address.sin_port = htons(22); // Port 21 for FTP
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)

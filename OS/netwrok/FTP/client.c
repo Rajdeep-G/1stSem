@@ -105,6 +105,13 @@ int handle_ftp(char *command)
             buffer[n] = '\0';
             printf("SERVER RESPONSE %s\n", buffer);
         }
+
+
+        FILE *file1 = fopen(downloaded_file_name, "rb");
+
+        // remove the last line from the file
+        
+
     }
     else if (strcmp(input[0], "put") == 0)
     {
@@ -116,7 +123,7 @@ int handle_ftp(char *command)
         // char put_command[] = "put f2.txt\r\n";
         send(client_socket, put_command, strlen(put_command), 0);
 
-        FILE *file = fopen("f2.txt", "rb");
+        FILE *file = fopen(input[1], "rb");
         if (file == NULL)
         {
             perror("[-]Error in reading file.");

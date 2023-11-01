@@ -44,7 +44,7 @@ void handle_FTP(void *arg)
             // modify the file name to filename+servercreated
             char *new_filename = malloc(strlen(filename) + 20);
             strcpy(new_filename, filename);
-            new_filename[strlen(new_filename) - 4] = '\0';
+            new_filename[strlen(new_filename) - 6] = '\0';
             strcat(new_filename, "_uploaded.txt");
 
             FILE *file = fopen(new_filename, "wb");
@@ -211,7 +211,7 @@ void handle_FTP(void *arg)
             {
                 char response[] = "250 Directory successfully changed.\r\n";
                 send(client_socket, response, strlen(response), 0);
-                system("pwd > pwd.txt"); //just for checking
+                // system("pwd > pwd.txt"); //just for checking
             }
             else
             {

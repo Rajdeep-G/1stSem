@@ -8,7 +8,7 @@
 1. surprise test (based on Gate level DSA) [link](/exams/opening_Test/)
 2. basics sorting algorithms and DP [link](/CL%20lab/C/sorting%20%26%20Dp)
 3. basic tree algorithms [link](/CL%20lab/C/tree/)
-4. basic graph algorithms [link](/CL%20lab/C/graph)
+4. basic graph algorithms [link](/CL%20lab/C/Graph)
 5. Linear programming (using Python) [link](/CL%20lab/python/LinearProgramming)
 6. NLP tasks (using NLTK and networkx) [link](/CL%20lab/python/NLP_tasks_py)
 7. Web scraping (using BeautifulSoup) [link](/CL%lab/Python/webscrapping_py)

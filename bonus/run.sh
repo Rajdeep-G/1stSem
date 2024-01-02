@@ -1,3 +1,3 @@
-g++ djikstra.cpp -o stl
-./stl
-rm stl
+gcc r2.c -o r2
+./r2
+rm r2

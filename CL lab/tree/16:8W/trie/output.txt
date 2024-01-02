@@ -1,9 +1,0 @@
-baaab
-aabab
-abaab
-ababa
-aaabb
-abbaa
-baaba
-
-No of unique stings: 7

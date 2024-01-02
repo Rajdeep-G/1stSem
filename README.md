@@ -21,4 +21,4 @@
 2. Midsem (Topics - Sortning , DP, tree, graphs, LinearProgram, NLP tasks ) [link](exams/MidsemTest)
 3. Endsem (Topics - Sortning , DP, tree, graphs, LinearProgram, NLP tasks, shell, multiThreading, networkProg ) [link](/exams/23CS60R10_ENDSEM/End%20Sem%20Lab%20Test.pdf)
 
-# Group obtained - 83.53 (EX)
+# Grade obtained - 83.53 (EX)
